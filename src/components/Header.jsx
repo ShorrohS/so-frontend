@@ -1,16 +1,13 @@
 import React from 'react'
+import Logo from './Logo'
 
 export default function Header({ onOpenAuthModal, onOpenBookingModal }) {
   return (
-    <header class="w-full top-0 sticky z-50 bg-[#F9F7F2]/90 backdrop-blur-sm flat no shadows border-b border-gold/10">
-      <div class="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-stack-sm max-w-container-max mx-auto">
-        <div class="flex items-center gap-2 cursor-pointer opacity-90 hover:opacity-100 transition-opacity">
-          <img
-            alt="Salon Orgænics Logo"
-            class="h-8 object-contain"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuAs6gHc6ab6LEcdUp1gxzoCcRX471ln2N3raTjUBZsFKt1WUi6dxKCNxHoTCE9BprVT7V8RQsfcLZTnWv9QuoHJL2UIFW9pSmxgCW7CAqR8CrkHhU7IMOPauXIRg1ccwvRX_ObjWp0vH7EMu72mn8HdIZiRSnlfbWW6hJkFbNP36cdLcUDT3g24qbla2oHBpvdX57SfEwH_fEnEQr6k2k9U2ll5t0rBqTLFP3zukM-2NfHM_5Jr2I12XTRaZGFT6eR6"
-          />
-        </div>
+    <header className="w-full top-0 sticky z-50 bg-[#F9F7F2]/90 backdrop-blur-sm flat no shadows border-b border-gold/10">
+      <div className="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-stack-sm max-w-container-max mx-auto">
+        <a href="#" className="opacity-90 hover:opacity-100 transition-opacity">
+          <Logo variant="header" />
+        </a>
         <nav class="hidden md:flex gap-6 items-center">
           <a class="text-on-surface-variant hover:text-primary transition-colors duration-300 font-medium" href="#services">
             Services
