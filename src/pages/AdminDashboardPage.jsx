@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 
 export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAddService, onAdminLogout, onNavigate }) {
-  const [activeTab, setActiveTab] = useState('services') // 'services' | 'cms' | 'users'
+  const [activeTab, setActiveTab] = useState('services')
   const [toast, setToast] = useState('')
 
   // Catalog State (Paginated & Filtered)
@@ -15,26 +15,27 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false)
   const [csvText, setCsvText] = useState('')
 
-  // Single Item Creation Form State
+  // Single Item Creation & Edit Form State
+  const [editingServiceId, setEditingServiceId] = useState(null)
   const [serviceForm, setServiceForm] = useState({
     name: '',
-    category: 'Sanctuary Hair Rituals',
-    subcategory: 'Scalp Health',
+    category: 'For Him',
+    subcategory: 'The Signature Cut',
     description: '',
-    bestForTag: 'Nourishing & Vitality',
+    bestForTag: 'Precision Styling & Scalp Health',
     imageUrl: '/images/service-1.jpg',
     isVisible: true,
-    basePrice: 120,
-    memberPrice: 100,
-    vipPrice: 85,
-    durationMinutes: 60
+    standardPrice: 300,
+    memberPrice: 150,
+    vipPrice: 100,
+    durationMinutes: 45
   })
 
   // CMS Form State
   const [cmsForm, setCmsForm] = useState({
     heroTitle: cmsSettings?.heroTitle || 'Organic Luxury for Your Hair & Soul',
     heroSubtitle: cmsSettings?.heroSubtitle || 'Experience holistic botanical hair treatments crafted with pure organic ingredients.',
-    tagline: cmsSettings?.tagline || 'ORGANIC LUXURY SANCTUARY',
+    tagline: cmsSettings?.tagline || 'SALON ORGANICS SANCTUARY',
     bannerImage: cmsSettings?.bannerImage || '/images/hero-banner.jpg'
   })
 
@@ -83,28 +84,108 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
 
   if (!admin) return null
 
-  // Handle Single Creation
+  // Handle Image File Selection for Live Preview
+  const handleImageFileChange = (e) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setServiceForm(prev => ({ ...prev, imageUrl: reader.result }))
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  // Handle Edit Action Button Click
+  const handleEditClick = (item) => {
+    setEditingServiceId(item.id)
+    setServiceForm({
+      name: item.name || '',
+      category: item.category || 'For Him',
+      subcategory: item.subcategory || 'General',
+      description: item.description || '',
+      bestForTag: item.bestForTag || '',
+      imageUrl: item.imageUrl || '/images/service-1.jpg',
+      isVisible: item.isVisible !== false,
+      standardPrice: item.pricing?.standard ?? item.pricing?.base ?? item.basePrice ?? 300,
+      memberPrice: item.pricing?.member ?? item.memberPrice ?? 150,
+      vipPrice: item.pricing?.vip ?? item.vipPrice ?? 100,
+      durationMinutes: item.durationMinutes || 45
+    })
+    setToast(`Editing "${item.name}"... Form pre-filled below.`)
+    setTimeout(() => setToast(''), 3000)
+
+    // Scroll smoothly to form
+    const formElem = document.getElementById('service-form-section')
+    if (formElem) {
+      formElem.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
+
+  const handleCancelEdit = () => {
+    setEditingServiceId(null)
+    setServiceForm({
+      name: '',
+      category: 'For Him',
+      subcategory: 'The Signature Cut',
+      description: '',
+      bestForTag: 'Precision Styling & Scalp Health',
+      imageUrl: '/images/service-1.jpg',
+      isVisible: true,
+      standardPrice: 300,
+      memberPrice: 150,
+      vipPrice: 100,
+      durationMinutes: 45
+    })
+  }
+
+  // Handle Single Creation or PUT Update Submit
   const handleServiceSubmit = async (e) => {
     e.preventDefault()
     try {
-      let res = await fetch('/api/v1/admin/services', {
-        method: 'POST',
+      const payload = {
+        name: serviceForm.name,
+        category: serviceForm.category,
+        subcategory: serviceForm.subcategory,
+        description: serviceForm.description,
+        bestForTag: serviceForm.bestForTag,
+        imageUrl: serviceForm.imageUrl,
+        isVisible: serviceForm.isVisible,
+        durationMinutes: parseInt(serviceForm.durationMinutes) || 45,
+        pricing: {
+          standard: parseFloat(serviceForm.standardPrice) || 300,
+          member: parseFloat(serviceForm.memberPrice) || 150,
+          vip: parseFloat(serviceForm.vipPrice) || 100
+        }
+      }
+
+      let url = '/api/v1/admin/services'
+      let method = 'POST'
+      if (editingServiceId) {
+        url = `/api/v1/admin/services/${editingServiceId}`
+        method = 'PUT'
+      }
+
+      let res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(serviceForm)
+        body: JSON.stringify(payload)
       })
+
       if (!res.ok) {
-        res = await fetch('http://localhost:3000/api/v1/admin/services', {
-          method: 'POST',
+        res = await fetch(`http://localhost:3000${url}`, {
+          method,
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(serviceForm)
+          body: JSON.stringify(payload)
         })
       }
-      setToast('Service published successfully!')
-      setServiceForm({ name: '', category: 'Sanctuary Hair Rituals', subcategory: 'Scalp Health', description: '', bestForTag: 'Nourishing', imageUrl: '/images/service-1.jpg', isVisible: true, basePrice: 120, memberPrice: 100, vipPrice: 85, durationMinutes: 60 })
+
+      setToast(editingServiceId ? 'Service updated successfully!' : 'New service item published!')
+      handleCancelEdit()
       fetchServices()
       setTimeout(() => setToast(''), 3000)
     } catch {
-      setToast('Service created locally.')
+      setToast('Service saved locally.')
       setTimeout(() => setToast(''), 3000)
     }
   }
@@ -149,7 +230,6 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
       if (csvText.trim().startsWith('[')) {
         parsedItems = JSON.parse(csvText)
       } else {
-        // Parse CSV lines
         const lines = csvText.trim().split('\n')
         const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''))
 
@@ -183,7 +263,7 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
       fetchServices()
       setTimeout(() => setToast(''), 3500)
     } catch (err) {
-      setToast('Error parsing CSV/JSON data. Please check structure.')
+      setToast('Error parsing CSV/JSON data.')
       setTimeout(() => setToast(''), 3500)
     }
   }
@@ -250,7 +330,7 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
             }`}
           >
             <span className="material-symbols-outlined text-base">spa</span>
-            <span>Scalable Service Catalog (300+)</span>
+            <span>Service Catalog Management</span>
           </button>
 
           <button
@@ -274,7 +354,7 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
           </button>
         </div>
 
-        {/* Tab 1: Scalable Service Catalog (300+) */}
+        {/* Tab 1: Service Catalog Management */}
         {activeTab === 'services' && (
           <div className="flex flex-col gap-6">
             {/* Toolbar */}
@@ -298,8 +378,13 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
                   onChange={(e) => { setSelectedCategory(e.target.value); setPage(1); }}
                 >
                   <option value="">All Categories</option>
-                  <option value="Sanctuary Hair Rituals">Sanctuary Hair Rituals</option>
-                  <option value="Botanical Colouring">Botanical Colouring</option>
+                  <option value="For Him">For Him</option>
+                  <option value="For Her">For Her</option>
+                  <option value="Colour Artistry">Colour Artistry</option>
+                  <option value="Hair Spa Rituals">Hair Spa Rituals</option>
+                  <option value="Transformation & Repair">Transformation & Repair</option>
+                  <option value="The Finishing Studio">The Finishing Studio</option>
+                  <option value="Skin, Hands & Body">Skin, Hands & Body</option>
                 </select>
               </div>
 
@@ -323,69 +408,84 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
                       <th className="py-3 px-4">Order</th>
                       <th className="py-3 px-4">Service</th>
                       <th className="py-3 px-4">Category / Subgroup</th>
-                      <th className="py-3 px-4 text-center">3-Tier Pricing (Base / Member / VIP)</th>
+                      <th className="py-3 px-4 text-center">3-Tier Prices in INR (₹) (Std / Member / VIP)</th>
                       <th className="py-3 px-4 text-center">Visibility</th>
-                      <th className="py-3 px-4 text-center">Reorder</th>
+                      <th className="py-3 px-4 text-center">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-outline-variant/20 text-xs">
-                    {services.map((item, idx) => (
-                      <tr key={item.id} className="hover:bg-[#F9F7F2] transition-colors">
-                        <td className="py-3 px-4 font-mono font-bold text-on-surface-variant text-[11px]">{item.displayOrder || idx + 1}</td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-[#EEF2EE] overflow-hidden shrink-0 border border-gold/30">
-                              <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                    {services.map((item, idx) => {
+                      const stdPrice = item.pricing?.standard ?? item.pricing?.base ?? item.basePrice ?? 300
+                      const memPrice = item.pricing?.member ?? item.memberPrice ?? 150
+                      const vipPrice = item.pricing?.vip ?? item.vipPrice ?? 100
+
+                      return (
+                        <tr key={item.id} className="hover:bg-[#F9F7F2] transition-colors">
+                          <td className="py-3 px-4 font-mono font-bold text-on-surface-variant text-[11px]">{item.displayOrder || idx + 1}</td>
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-[#EEF2EE] overflow-hidden shrink-0 border border-gold/30">
+                                <img src={item.imageUrl || '/images/service-1.jpg'} alt={item.name} className="w-full h-full object-cover" />
+                              </div>
+                              <div>
+                                <span className="font-bold text-[#042C1D] block">{item.name}</span>
+                                <span className="text-[10px] text-on-surface-variant line-clamp-1">{item.description}</span>
+                              </div>
                             </div>
-                            <div>
-                              <span className="font-bold text-[#042C1D] block">{item.name}</span>
-                              <span className="text-[10px] text-on-surface-variant line-clamp-1">{item.description}</span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="bg-[#FAF6F0] text-[#042C1D] px-2 py-0.5 rounded text-[10px] font-semibold border border-gold/30 block w-fit">{item.category}</span>
+                            <span className="text-[10px] text-on-surface-variant block mt-0.5">{item.subcategory || 'General'}</span>
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <div className="flex items-center justify-center gap-1.5 font-mono font-semibold text-xs">
+                              <span className="text-on-surface font-bold">₹{stdPrice}</span>
+                              <span className="text-on-surface-variant">/</span>
+                              <span className="text-primary font-bold">₹{memPrice}</span>
+                              <span className="text-on-surface-variant">/</span>
+                              <span className="text-[#D4AF37] font-bold">₹{vipPrice}</span>
                             </div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className="bg-[#FAF6F0] text-[#042C1D] px-2 py-0.5 rounded text-[10px] font-semibold border border-gold/30 block w-fit">{item.category}</span>
-                          <span className="text-[10px] text-on-surface-variant block mt-0.5">{item.subcategory || 'General'}</span>
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <div className="flex items-center justify-center gap-2 font-mono font-semibold">
-                            <span className="text-on-surface">${item.pricing?.base ?? item.basePrice}</span>
-                            <span className="text-on-surface-variant">/</span>
-                            <span className="text-primary">${item.pricing?.member ?? item.memberPrice}</span>
-                            <span className="text-on-surface-variant">/</span>
-                            <span className="text-[#D4AF37] font-bold">${item.pricing?.vip ?? item.vipPrice}</span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <button
-                            onClick={() => handleToggleVisibility(item.id, item.isVisible)}
-                            className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${
-                              item.isVisible !== false ? 'bg-primary/10 text-primary border border-primary/30' : 'bg-error/10 text-error border border-error/30'
-                            }`}
-                          >
-                            {item.isVisible !== false ? 'Visible' : 'Hidden'}
-                          </button>
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <div className="flex items-center justify-center gap-1">
+                          </td>
+                          <td className="py-3 px-4 text-center">
                             <button
-                              onClick={() => handleReorder(item.id, 'up')}
-                              className="p-1 text-[#042C1D] hover:bg-[#EEF2EE] rounded transition-colors cursor-pointer"
-                              title="Move Up"
+                              onClick={() => handleToggleVisibility(item.id, item.isVisible)}
+                              className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                                item.isVisible !== false ? 'bg-primary/10 text-primary border border-primary/30' : 'bg-error/10 text-error border border-error/30'
+                              }`}
                             >
-                              <span className="material-symbols-outlined text-base">arrow_upward</span>
+                              {item.isVisible !== false ? 'Visible' : 'Hidden'}
                             </button>
-                            <button
-                              onClick={() => handleReorder(item.id, 'down')}
-                              className="p-1 text-[#042C1D] hover:bg-[#EEF2EE] rounded transition-colors cursor-pointer"
-                              title="Move Down"
-                            >
-                              <span className="material-symbols-outlined text-base">arrow_downward</span>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <button
+                                onClick={() => handleEditClick(item)}
+                                className="px-2.5 py-1 bg-[#042C1D] text-white hover:bg-[#084D34] rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer shadow-xs flex items-center gap-1"
+                                title="Edit Service Item"
+                              >
+                                <span className="material-symbols-outlined text-xs">edit</span>
+                                <span>Edit</span>
+                              </button>
+
+                              <button
+                                onClick={() => handleReorder(item.id, 'up')}
+                                className="p-1 text-[#042C1D] hover:bg-[#EEF2EE] rounded transition-colors cursor-pointer"
+                                title="Move Up"
+                              >
+                                <span className="material-symbols-outlined text-base">arrow_upward</span>
+                              </button>
+                              <button
+                                onClick={() => handleReorder(item.id, 'down')}
+                                className="p-1 text-[#042C1D] hover:bg-[#EEF2EE] rounded transition-colors cursor-pointer"
+                                title="Move Down"
+                              >
+                                <span className="material-symbols-outlined text-base">arrow_downward</span>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -418,74 +518,190 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
               </div>
             </div>
 
-            {/* Single Service Item Creation Form */}
-            <div className="bg-white rounded-3xl border border-[#042C1D]/15 p-6 md:p-8 shadow-sm">
-              <h3 className="font-headline-lg text-lg text-[#042C1D] mb-4 font-bold">Add Single Service Item</h3>
-              <form onSubmit={handleServiceSubmit} className="flex flex-col gap-4 max-w-3xl">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Restored Complete Service Item Addition & Edit Form */}
+            <div id="service-form-section" className="bg-white rounded-3xl border border-[#042C1D]/15 p-6 md:p-8 shadow-sm">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h3 className="font-headline-lg text-lg text-[#042C1D] font-bold">
+                    {editingServiceId ? 'Edit Service Item' : 'Add Single Service Item'}
+                  </h3>
+                  <p className="text-xs text-on-surface-variant">Fill in complete service parameters, description, 3-tier prices in INR (₹), and image preview.</p>
+                </div>
+                {editingServiceId && (
+                  <button
+                    type="button"
+                    onClick={handleCancelEdit}
+                    className="bg-secondary/10 text-secondary border border-secondary/30 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider hover:bg-secondary/20 transition-all cursor-pointer"
+                  >
+                    Cancel Edit Mode
+                  </button>
+                )}
+              </div>
+
+              <form onSubmit={handleServiceSubmit} className="flex flex-col gap-5 max-w-4xl">
+                {/* Name, Category, Subgroup */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-xs font-label-md uppercase tracking-wider text-[#042C1D] mb-1 font-bold">Service Name</label>
+                    <label className="block text-xs font-label-md uppercase tracking-wider text-[#042C1D] mb-1 font-bold">Service Name *</label>
                     <input
                       required
-                      className="w-full bg-[#F9F7F2] border border-outline-variant/30 rounded-xl px-4 py-2 text-sm focus:border-[#042C1D] outline-none text-[#042C1D]"
-                      placeholder="e.g. Organic Keratin Gloss"
+                      className="w-full bg-[#F9F7F2] border border-outline-variant/30 rounded-xl px-4 py-2.5 text-sm focus:border-[#042C1D] outline-none text-[#042C1D]"
+                      placeholder="e.g. Classic Precision Cut"
                       value={serviceForm.name}
                       onChange={(e) => setServiceForm({ ...serviceForm, name: e.target.value })}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-label-md uppercase tracking-wider text-[#042C1D] mb-1 font-bold">Category</label>
+                    <label className="block text-xs font-label-md uppercase tracking-wider text-[#042C1D] mb-1 font-bold">Category *</label>
                     <select
-                      className="w-full bg-[#F9F7F2] border border-outline-variant/30 rounded-xl px-4 py-2 text-sm focus:border-[#042C1D] outline-none text-[#042C1D]"
+                      className="w-full bg-[#F9F7F2] border border-outline-variant/30 rounded-xl px-4 py-2.5 text-sm focus:border-[#042C1D] outline-none text-[#042C1D]"
                       value={serviceForm.category}
                       onChange={(e) => setServiceForm({ ...serviceForm, category: e.target.value })}
                     >
-                      <option value="Sanctuary Hair Rituals">Sanctuary Hair Rituals</option>
-                      <option value="Botanical Colouring">Botanical Colouring</option>
+                      <option value="For Him">For Him</option>
+                      <option value="For Her">For Her</option>
+                      <option value="Colour Artistry">Colour Artistry</option>
+                      <option value="Hair Spa Rituals">Hair Spa Rituals</option>
+                      <option value="Transformation & Repair">Transformation & Repair</option>
+                      <option value="The Finishing Studio">The Finishing Studio</option>
+                      <option value="Skin, Hands & Body">Skin, Hands & Body</option>
                     </select>
                   </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-xs font-label-md uppercase text-[#042C1D] mb-1 font-bold">Base Price ($)</label>
-                    <input
-                      type="number"
-                      className="w-full bg-[#F9F7F2] border border-outline-variant/30 rounded-xl p-2.5 text-sm font-semibold"
-                      value={serviceForm.basePrice}
-                      onChange={(e) => setServiceForm({ ...serviceForm, basePrice: e.target.value })}
-                    />
-                  </div>
 
                   <div>
-                    <label className="block text-xs font-label-md uppercase text-[#042C1D] mb-1 font-bold">Member Price ($)</label>
+                    <label className="block text-xs font-label-md uppercase tracking-wider text-[#042C1D] mb-1 font-bold">Sub-Group Name</label>
                     <input
-                      type="number"
-                      className="w-full bg-[#F9F7F2] border border-outline-variant/30 rounded-xl p-2.5 text-sm font-semibold"
-                      value={serviceForm.memberPrice}
-                      onChange={(e) => setServiceForm({ ...serviceForm, memberPrice: e.target.value })}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-label-md uppercase text-[#D4AF37] mb-1 font-bold">VIP Price ($)</label>
-                    <input
-                      type="number"
-                      className="w-full bg-[#F9F7F2] border border-[#D4AF37] rounded-xl p-2.5 text-sm font-bold text-[#042C1D]"
-                      value={serviceForm.vipPrice}
-                      onChange={(e) => setServiceForm({ ...serviceForm, vipPrice: e.target.value })}
+                      className="w-full bg-[#F9F7F2] border border-outline-variant/30 rounded-xl px-4 py-2.5 text-sm focus:border-[#042C1D] outline-none text-[#042C1D]"
+                      placeholder="e.g. The Signature Cut"
+                      value={serviceForm.subcategory}
+                      onChange={(e) => setServiceForm({ ...serviceForm, subcategory: e.target.value })}
                     />
                   </div>
                 </div>
 
-                <button
-                  type="submit"
-                  className="bg-[#042C1D] text-[#FAF6F0] py-3 px-8 rounded-full font-label-md uppercase tracking-wider text-xs hover:bg-[#084D34] transition-all duration-300 border border-[#D4AF37]/40 shadow-sm font-bold flex items-center justify-center gap-2 self-start cursor-pointer mt-2"
-                >
-                  <span className="material-symbols-outlined text-base">add_circle</span>
-                  <span>Publish Service Item</span>
-                </button>
+                {/* Description Textarea */}
+                <div>
+                  <label className="block text-xs font-label-md uppercase tracking-wider text-[#042C1D] mb-1 font-bold">Service Description *</label>
+                  <textarea
+                    required
+                    rows={3}
+                    className="w-full bg-[#F9F7F2] border border-outline-variant/30 rounded-xl px-4 py-2.5 text-sm focus:border-[#042C1D] outline-none text-[#042C1D]"
+                    placeholder="Enter detailed description of ritual, benefits, and cleansing rituals..."
+                    value={serviceForm.description}
+                    onChange={(e) => setServiceForm({ ...serviceForm, description: e.target.value })}
+                  />
+                </div>
+
+                {/* Best For Tags & Duration */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-label-md uppercase tracking-wider text-[#042C1D] mb-1 font-bold">Best For Tags</label>
+                    <input
+                      className="w-full bg-[#F9F7F2] border border-outline-variant/30 rounded-xl px-4 py-2.5 text-sm focus:border-[#042C1D] outline-none text-[#042C1D]"
+                      placeholder="e.g. Precision styling, Follicle vitality"
+                      value={serviceForm.bestForTag}
+                      onChange={(e) => setServiceForm({ ...serviceForm, bestForTag: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-label-md uppercase tracking-wider text-[#042C1D] mb-1 font-bold">Duration (Minutes)</label>
+                    <input
+                      type="number"
+                      className="w-full bg-[#F9F7F2] border border-outline-variant/30 rounded-xl px-4 py-2.5 text-sm focus:border-[#042C1D] outline-none text-[#042C1D]"
+                      value={serviceForm.durationMinutes}
+                      onChange={(e) => setServiceForm({ ...serviceForm, durationMinutes: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                {/* Separate 3-Tier Prices in INR (₹) */}
+                <div className="bg-[#FAF6F0] p-4 rounded-2xl border border-[#D4AF37]/30">
+                  <span className="text-[10px] font-label-md uppercase tracking-wider text-[#042C1D] font-bold block mb-3">
+                    3-Tier Pricing Model in Indian Rupees (₹)
+                  </span>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs font-label-md uppercase text-[#042C1D] mb-1 font-bold">Standard Rate (₹)</label>
+                      <input
+                        type="number"
+                        className="w-full bg-white border border-outline-variant/30 rounded-xl p-2.5 text-sm font-semibold text-[#042C1D]"
+                        value={serviceForm.standardPrice}
+                        onChange={(e) => setServiceForm({ ...serviceForm, standardPrice: e.target.value })}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-label-md uppercase text-[#042C1D] mb-1 font-bold">Member Rate (₹)</label>
+                      <input
+                        type="number"
+                        className="w-full bg-white border border-outline-variant/30 rounded-xl p-2.5 text-sm font-semibold text-[#042C1D]"
+                        value={serviceForm.memberPrice}
+                        onChange={(e) => setServiceForm({ ...serviceForm, memberPrice: e.target.value })}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-label-md uppercase text-[#D4AF37] mb-1 font-bold">VIP Sanctuary Rate (₹)</label>
+                      <input
+                        type="number"
+                        className="w-full bg-white border border-[#D4AF37] rounded-xl p-2.5 text-sm font-bold text-[#042C1D]"
+                        value={serviceForm.vipPrice}
+                        onChange={(e) => setServiceForm({ ...serviceForm, vipPrice: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Service Image Picker & Live Thumbnail Preview Container */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                  <div className="md:col-span-2 flex flex-col gap-2">
+                    <label className="block text-xs font-label-md uppercase tracking-wider text-[#042C1D] font-bold">Service Image Upload & URL</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageFileChange}
+                      className="w-full bg-[#F9F7F2] border border-outline-variant/30 rounded-xl px-3 py-2 text-xs text-[#042C1D]"
+                    />
+                    <input
+                      className="w-full bg-[#F9F7F2] border border-outline-variant/30 rounded-xl px-4 py-2 text-xs focus:border-[#042C1D] outline-none text-[#042C1D]"
+                      placeholder="Or paste image URL (e.g. /images/service-1.jpg)"
+                      value={serviceForm.imageUrl}
+                      onChange={(e) => setServiceForm({ ...serviceForm, imageUrl: e.target.value })}
+                    />
+                  </div>
+
+                  {/* Live Thumbnail Preview */}
+                  <div className="flex flex-col items-center justify-center p-3 bg-[#EEF2EE] rounded-2xl border border-[#042C1D]/20">
+                    <span className="text-[10px] uppercase font-bold text-[#042C1D] mb-1">Live Image Preview</span>
+                    <div className="w-20 h-20 rounded-xl overflow-hidden bg-white border border-gold/40 shadow-xs">
+                      <img src={serviceForm.imageUrl || '/images/service-1.jpg'} alt="Preview" className="w-full h-full object-cover" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 mt-2">
+                  <button
+                    type="submit"
+                    className="bg-[#042C1D] text-[#FAF6F0] py-3.5 px-8 rounded-full font-label-md uppercase tracking-wider text-xs hover:bg-[#084D34] transition-all duration-300 border border-[#D4AF37]/40 shadow-sm font-bold flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-base">
+                      {editingServiceId ? 'save' : 'add_circle'}
+                    </span>
+                    <span>{editingServiceId ? 'UPDATE SERVICE ITEM' : 'Publish Service Item'}</span>
+                  </button>
+
+                  {editingServiceId && (
+                    <button
+                      type="button"
+                      onClick={handleCancelEdit}
+                      className="px-6 py-3 rounded-full border border-outline-variant/30 text-on-surface-variant font-bold text-xs hover:bg-black/5 cursor-pointer"
+                    >
+                      Cancel Edit
+                    </button>
+                  )}
+                </div>
               </form>
             </div>
           </div>
@@ -586,12 +802,12 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
             </button>
 
             <h3 className="font-headline-lg text-xl text-[#042C1D] font-bold mb-1">Bulk Service Catalog Importer</h3>
-            <p className="text-xs text-on-surface-variant mb-4">Paste CSV or JSON array containing up to 500+ service entries for single-transaction bulk import.</p>
+            <p className="text-xs text-on-surface-variant mb-4">Paste CSV or JSON array containing service entries for single-transaction bulk import.</p>
 
             <textarea
               rows={10}
               className="w-full bg-white border border-[#042C1D]/20 rounded-2xl p-4 text-xs font-mono text-[#042C1D] outline-none focus:border-[#042C1D]"
-              placeholder='name,category,subcategory,description,bestForTag,imageUrl,isVisible,basePrice,memberPrice,vipPrice,durationMinutes&#10;"Vegan Keratin Smoothing","Sanctuary Hair Rituals","Smoothing","Formaldehyde-free smoothing ritual","Frizzy hair","https://s3.amazonaws.com/salon/keratin.jpg",true,120,100,85,90'
+              placeholder='name,category,subcategory,description,bestForTag,imageUrl,isVisible,standardPrice,memberPrice,vipPrice,durationMinutes&#10;"Classic Precision Cut","For Him","The Signature Cut","Precision cut","Styling","/images/service-1.jpg",true,300,180,75,45'
               value={csvText}
               onChange={(e) => setCsvText(e.target.value)}
             />
