@@ -10,11 +10,13 @@ import BookingModal from './components/BookingModal'
 import UserProfileModal from './components/UserProfileModal'
 import AdminLoginPage from './pages/AdminLoginPage'
 import AdminDashboardPage from './pages/AdminDashboardPage'
+import ServicesPage from './pages/ServicesPage'
 
 export default function App() {
   // Simple, lightweight route state (supports window.location.pathname / hash)
   const [currentRoute, setCurrentRoute] = useState(() => {
     const hash = window.location.hash.replace('#', '')
+    if (hash === '/services' || window.location.pathname === '/services') return '/services'
     if (hash === '/admin/login' || window.location.pathname === '/admin/login') return '/admin/login'
     if (hash === '/admin/dashboard' || window.location.pathname === '/admin/dashboard') return '/admin/dashboard'
     return '/'
@@ -23,7 +25,8 @@ export default function App() {
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '')
-      if (hash === '/admin/login') setCurrentRoute('/admin/login')
+      if (hash === '/services') setCurrentRoute('/services')
+      else if (hash === '/admin/login') setCurrentRoute('/admin/login')
       else if (hash === '/admin/dashboard') setCurrentRoute('/admin/dashboard')
       else if (hash === '/' || hash === '') setCurrentRoute('/')
     }
@@ -137,7 +140,23 @@ export default function App() {
 
   // --- ROUTE SWITCHER ---
 
-  // 1. Standalone Admin Login View (/admin/login)
+  // 1. Full Detailed Services Sanctuary Menu Page (/services)
+  if (currentRoute === '/services') {
+    return (
+      <>
+        <ServicesPage
+          onOpenBookingModal={() => setIsBookingOpen(true)}
+          onNavigate={navigate}
+        />
+        <BookingModal
+          isOpen={isBookingOpen}
+          onClose={() => setIsBookingOpen(false)}
+        />
+      </>
+    )
+  }
+
+  // 2. Standalone Admin Login View (/admin/login)
   if (currentRoute === '/admin/login') {
     return (
       <AdminLoginPage
@@ -147,7 +166,7 @@ export default function App() {
     )
   }
 
-  // 2. Standalone Admin Dashboard View (/admin/dashboard with Route Guard)
+  // 3. Standalone Admin Dashboard View (/admin/dashboard with Route Guard)
   if (currentRoute === '/admin/dashboard') {
     return (
       <AdminDashboardPage
@@ -161,7 +180,7 @@ export default function App() {
     )
   }
 
-  // 3. Public Landing Page View (/)
+  // 4. Public Landing Page View (/)
   return (
     <div className="min-h-screen flex flex-col font-body-md text-body-md bg-[#F9F7F2]">
       {admin && (
@@ -191,12 +210,13 @@ export default function App() {
         user={user}
         onOpenAuthModal={(mode) => setAuthModal({ isOpen: true, mode })}
         onOpenProfileModal={() => setIsProfileOpen(true)}
+        onNavigate={navigate}
       />
 
       <main className="flex-grow">
         <Hero cmsSettings={cmsSettings} onOpenBookingModal={() => setIsBookingOpen(true)} />
         <MembershipForm />
-        <ServicesAccordion onOpenBookingModal={() => setIsBookingOpen(true)} />
+        <ServicesAccordion onOpenBookingModal={() => setIsBookingOpen(true)} onNavigate={navigate} />
         <Philosophy />
       </main>
 

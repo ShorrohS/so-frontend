@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 
-export default function ServicesAccordion({ onOpenBookingModal }) {
-  const [openIndices, setOpenIndices] = useState([0]) // default first open
+export default function ServicesAccordion({ onOpenBookingModal, onNavigate }) {
+  const [openIndices, setOpenIndices] = useState([0])
 
   const services = [
     {
@@ -75,7 +75,7 @@ export default function ServicesAccordion({ onOpenBookingModal }) {
                     <span className="font-label-md uppercase text-on-surface-variant tracking-wider font-semibold">{service.price}</span>
                     <button
                       onClick={onOpenBookingModal}
-                      className="text-gold font-label-md uppercase tracking-wider hover:text-primary transition-colors flex items-center gap-1 font-semibold"
+                      className="text-gold font-label-md uppercase tracking-wider hover:text-primary transition-colors flex items-center gap-1 font-semibold cursor-pointer"
                     >
                       Book Service
                       <span className="material-symbols-outlined text-sm">arrow_forward</span>
@@ -89,8 +89,8 @@ export default function ServicesAccordion({ onOpenBookingModal }) {
       </div>
       <div className="mt-stack-lg text-center">
         <button
-          onClick={onOpenBookingModal}
-          className="border border-[#D4AF37] text-on-background px-10 py-4 rounded-full font-label-md uppercase tracking-wider hover:bg-[#D4AF37]/10 transition-colors duration-300 shadow-sm"
+          onClick={() => onNavigate ? onNavigate('/services') : (window.location.hash = '#/services')}
+          className="border border-[#D4AF37] text-on-background px-10 py-4 rounded-full font-label-md uppercase tracking-wider hover:bg-[#D4AF37]/10 transition-colors duration-300 shadow-sm font-bold cursor-pointer"
         >
           View Full Menu
         </button>
