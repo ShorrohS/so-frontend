@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
+import catalogueData from '../data/serviceCatalogue.json'
 
 export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAddService, onAdminLogout, onNavigate }) {
-  const [activeTab, setActiveTab] = useState('bookings') // 'bookings' | 'services' | 'cms' | 'users'
+  const [activeTab, setActiveTab] = useState('services') // 'services' | 'bookings' | 'cms' | 'users'
   const [toast, setToast] = useState('')
 
   // Catalog State
@@ -65,7 +66,60 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
     }
   }, [admin, onNavigate])
 
-  // Fetch Services & Bookings
+  // Flatten serviceCatalogue.json for Client Fallback (47 items)
+  const getFallbackServices = () => {
+    let list = []
+    let order = 1
+    const categories = catalogueData?.catalogue?.categories || []
+
+    categories.forEach(cat => {
+      const categoryName = cat.name
+      const groups = cat.groups || []
+
+      groups.forEach(grp => {
+        const subcategoryName = grp.name
+        const srvList = grp.services || []
+
+        srvList.forEach(srv => {
+          let stdPrice = 300
+          let memPrice = 150
+          let vipPrice = 100
+
+          if (srv.pricing) {
+            stdPrice = typeof srv.pricing.standard === 'number' ? srv.pricing.standard : 300
+            memPrice = typeof srv.pricing.member === 'number' ? srv.pricing.member : 150
+            vipPrice = typeof srv.pricing.offer === 'number' ? srv.pricing.offer : Math.floor(stdPrice * 0.7)
+          } else if (srv.length_pricing) {
+            const stdObj = srv.length_pricing.standard || srv.length_pricing.Medium || {}
+            stdPrice = typeof stdObj === 'number' ? stdObj : 1200
+            memPrice = Math.floor(stdPrice * 0.7)
+            vipPrice = Math.floor(stdPrice * 0.5)
+          }
+
+          list.push({
+            id: srv.id,
+            name: srv.name,
+            category: categoryName,
+            subcategory: subcategoryName,
+            description: srv.description || `${srv.name} ritual at Salon Organics.`,
+            bestForTag: (srv.features && srv.features[0]) || 'Organic Care',
+            imageUrl: `/images/service-${(order % 3) + 1}.jpg`,
+            isVisible: true,
+            displayOrder: order++,
+            durationMinutes: 45,
+            pricing: {
+              standard: stdPrice,
+              member: memPrice,
+              vip: vipPrice
+            }
+          })
+        })
+      })
+    })
+    return list
+  }
+
+  // Fetch Services (with Fallback to Complete Catalogue)
   const fetchServices = async () => {
     try {
       const query = new URLSearchParams({
@@ -80,12 +134,34 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
         res = await fetch(`http://localhost:3000/api/v1/admin/services?${query}`)
       }
       const data = await res.json()
-      if (data.success && Array.isArray(data.items)) {
+      if (data.success && Array.isArray(data.items) && data.total >= 40) {
         setServices(data.items)
         setTotal(data.total)
         setTotalPages(data.totalPages)
+        return
       }
     } catch {}
+
+    // Fallback using client catalogue dataset
+    let fallback = getFallbackServices()
+    const searchLower = search.toLowerCase().trim()
+    const categoryLower = selectedCategory.toLowerCase().trim()
+
+    if (searchLower) {
+      fallback = fallback.filter(s => s.name.toLowerCase().includes(searchLower) || s.description.toLowerCase().includes(searchLower))
+    }
+    if (categoryLower) {
+      fallback = fallback.filter(s => s.category.toLowerCase() === categoryLower)
+    }
+
+    const calcTotal = fallback.length
+    const calcPages = Math.ceil(calcTotal / limit) || 1
+    const startIndex = (page - 1) * limit
+    const paginated = fallback.slice(startIndex, startIndex + limit)
+
+    setServices(paginated)
+    setTotal(calcTotal)
+    setTotalPages(calcPages)
   }
 
   const fetchBookings = async () => {
@@ -285,16 +361,6 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
         {/* Navigation Tabs */}
         <div className="flex border-b border-outline-variant/30 bg-[#EEF2EE] rounded-2xl overflow-hidden p-1 gap-1 border">
           <button
-            onClick={() => setActiveTab('bookings')}
-            className={`flex-1 py-3 text-center font-label-md uppercase tracking-wider text-xs transition-all duration-300 rounded-xl font-bold flex items-center justify-center gap-2 cursor-pointer ${
-              activeTab === 'bookings' ? 'bg-[#042C1D] text-[#FAF6F0] shadow-sm' : 'text-on-surface-variant hover:text-[#042C1D]'
-            }`}
-          >
-            <span className="material-symbols-outlined text-base">calendar_month</span>
-            <span>Bookings Atelier</span>
-          </button>
-
-          <button
             onClick={() => setActiveTab('services')}
             className={`flex-1 py-3 text-center font-label-md uppercase tracking-wider text-xs transition-all duration-300 rounded-xl font-bold flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === 'services' ? 'bg-[#042C1D] text-[#FAF6F0] shadow-sm' : 'text-on-surface-variant hover:text-[#042C1D]'
@@ -302,6 +368,16 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
           >
             <span className="material-symbols-outlined text-base">spa</span>
             <span>Service Catalog Management</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('bookings')}
+            className={`flex-1 py-3 text-center font-label-md uppercase tracking-wider text-xs transition-all duration-300 rounded-xl font-bold flex items-center justify-center gap-2 cursor-pointer ${
+              activeTab === 'bookings' ? 'bg-[#042C1D] text-[#FAF6F0] shadow-sm' : 'text-on-surface-variant hover:text-[#042C1D]'
+            }`}
+          >
+            <span className="material-symbols-outlined text-base">calendar_month</span>
+            <span>Bookings Atelier</span>
           </button>
 
           <button
@@ -325,10 +401,143 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
           </button>
         </div>
 
-        {/* Tab 1: Bookings Atelier */}
+        {/* Tab 1: Service Catalog Management */}
+        {activeTab === 'services' && (
+          <div className="flex flex-col gap-6">
+            <div className="bg-white rounded-3xl border border-[#042C1D]/15 p-6 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
+              <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                <div className="relative flex-grow md:w-64">
+                  <span className="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-base">search</span>
+                  <input
+                    className="w-full bg-[#F9F7F2] border border-outline-variant/30 rounded-xl pl-9 pr-4 py-2 text-xs focus:border-[#042C1D] outline-none text-[#042C1D]"
+                    placeholder="Search name or description..."
+                    value={search}
+                    onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                  />
+                </div>
+
+                <select
+                  className="bg-[#F9F7F2] border border-outline-variant/30 rounded-xl px-3 py-2 text-xs font-semibold text-[#042C1D] outline-none"
+                  value={selectedCategory}
+                  onChange={(e) => { setSelectedCategory(e.target.value); setPage(1); }}
+                >
+                  <option value="">All Categories</option>
+                  <option value="For Him">For Him</option>
+                  <option value="For Her">For Her</option>
+                  <option value="Colour Artistry">Colour Artistry</option>
+                  <option value="Hair Spa Rituals">Hair Spa Rituals</option>
+                  <option value="Advanced Hair Therapies">Advanced Hair Therapies</option>
+                  <option value="The Finishing Studio">The Finishing Studio</option>
+                  <option value="Skin, Hands & Body">Skin, Hands & Body</option>
+                </select>
+              </div>
+
+              <div className="text-xs font-bold text-[#042C1D]">
+                Total Catalog Items: <strong>{total}</strong> (Page {page} of {totalPages})
+              </div>
+            </div>
+
+            {/* Compact Service Data Table */}
+            <div className="bg-white rounded-3xl border border-[#042C1D]/15 overflow-hidden shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-[#EEF2EE] border-b border-[#042C1D]/10 text-[10px] font-label-md uppercase tracking-wider text-[#042C1D] font-bold">
+                      <th className="py-3 px-4">Order</th>
+                      <th className="py-3 px-4">Service</th>
+                      <th className="py-3 px-4">Category / Subgroup</th>
+                      <th className="py-3 px-4 text-center">3-Tier Prices in INR (₹)</th>
+                      <th className="py-3 px-4 text-center">Visibility</th>
+                      <th className="py-3 px-4 text-center">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-outline-variant/20 text-xs">
+                    {services.map((item, idx) => (
+                      <tr key={item.id} className="hover:bg-[#F9F7F2] transition-colors">
+                        <td className="py-3 px-4 font-mono font-bold text-on-surface-variant text-[11px]">{item.displayOrder || (page - 1) * limit + idx + 1}</td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-[#EEF2EE] overflow-hidden shrink-0 border border-gold/30">
+                              <img src={item.imageUrl || '/images/service-1.jpg'} alt={item.name} className="w-full h-full object-cover" />
+                            </div>
+                            <div>
+                              <span className="font-bold text-[#042C1D] block">{item.name}</span>
+                              <span className="text-[10px] text-on-surface-variant line-clamp-1">{item.description}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="bg-[#FAF6F0] text-[#042C1D] px-2 py-0.5 rounded text-[10px] font-semibold border border-gold/30 block w-fit">{item.category}</span>
+                          <span className="text-[10px] text-on-surface-variant block mt-0.5">{item.subcategory || 'General'}</span>
+                        </td>
+                        <td className="py-3 px-4 text-center font-mono font-semibold text-xs">
+                          ₹{item.pricing?.standard ?? 300} / ₹{item.pricing?.member ?? 150} / ₹{item.pricing?.vip ?? 100}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <span className="px-2 py-1 bg-primary/10 text-primary rounded-full text-[10px] font-bold uppercase">Visible</span>
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <button
+                            onClick={() => {
+                              setEditingServiceId(item.id)
+                              setServiceForm({
+                                name: item.name,
+                                category: item.category || 'For Him',
+                                subcategory: item.subcategory || 'General',
+                                description: item.description || '',
+                                bestForTag: item.bestForTag || '',
+                                imageUrl: item.imageUrl || '/images/service-1.jpg',
+                                isVisible: true,
+                                standardPrice: item.pricing?.standard || 300,
+                                memberPrice: item.pricing?.member || 150,
+                                vipPrice: item.pricing?.vip || 100,
+                                durationMinutes: item.durationMinutes || 45
+                              })
+                            }}
+                            className="px-2.5 py-1 bg-[#042C1D] text-white hover:bg-[#084D34] rounded-lg text-[10px] font-bold uppercase cursor-pointer"
+                          >
+                            Edit
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination Controls */}
+              <div className="p-4 bg-[#FAF6F0] border-t border-[#042C1D]/10 flex flex-col md:flex-row justify-between items-center gap-3 text-xs">
+                <span className="text-on-surface-variant font-medium">
+                  Showing {(page - 1) * limit + 1} - {Math.min(page * limit, total)} of {total} Catalog Entries
+                </span>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    disabled={page <= 1}
+                    onClick={() => setPage(page - 1)}
+                    className="px-3 py-1.5 rounded-full border border-[#042C1D]/20 text-[#042C1D] font-bold disabled:opacity-40 hover:bg-[#042C1D] hover:text-white transition-all cursor-pointer"
+                  >
+                    Previous
+                  </button>
+
+                  <span className="font-bold text-[#042C1D] px-2">Page {page} of {totalPages}</span>
+
+                  <button
+                    disabled={page >= totalPages}
+                    onClick={() => setPage(page + 1)}
+                    className="px-3 py-1.5 rounded-full border border-[#042C1D]/20 text-[#042C1D] font-bold disabled:opacity-40 hover:bg-[#042C1D] hover:text-white transition-all cursor-pointer"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 2: Bookings Atelier */}
         {activeTab === 'bookings' && (
           <div className="flex flex-col gap-6">
-            {/* Toolbar */}
             <div className="bg-white rounded-3xl border border-[#042C1D]/15 p-6 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
               <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
                 <div className="relative flex-grow md:w-64">
@@ -436,118 +645,6 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
                               </button>
                             )}
                           </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Tab 2: Service Catalog Management */}
-        {activeTab === 'services' && (
-          <div className="flex flex-col gap-6">
-            <div className="bg-white rounded-3xl border border-[#042C1D]/15 p-6 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
-              <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                <div className="relative flex-grow md:w-64">
-                  <span className="material-symbols-outlined absolute left-3 top-2.5 text-on-surface-variant text-base">search</span>
-                  <input
-                    className="w-full bg-[#F9F7F2] border border-outline-variant/30 rounded-xl pl-9 pr-4 py-2 text-xs focus:border-[#042C1D] outline-none text-[#042C1D]"
-                    placeholder="Search name or description..."
-                    value={search}
-                    onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                  />
-                </div>
-
-                <select
-                  className="bg-[#F9F7F2] border border-outline-variant/30 rounded-xl px-3 py-2 text-xs font-semibold text-[#042C1D] outline-none"
-                  value={selectedCategory}
-                  onChange={(e) => { setSelectedCategory(e.target.value); setPage(1); }}
-                >
-                  <option value="">All Categories</option>
-                  <option value="For Him">For Him</option>
-                  <option value="For Her">For Her</option>
-                  <option value="Colour Artistry">Colour Artistry</option>
-                  <option value="Hair Spa Rituals">Hair Spa Rituals</option>
-                  <option value="Transformation & Repair">Transformation & Repair</option>
-                  <option value="The Finishing Studio">The Finishing Studio</option>
-                  <option value="Skin, Hands & Body">Skin, Hands & Body</option>
-                </select>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setIsBulkModalOpen(true)}
-                  className="bg-[#FAF6F0] text-[#042C1D] border border-[#042C1D]/30 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider hover:bg-[#042C1D] hover:text-[#FAF6F0] transition-all duration-300 flex items-center gap-1.5 cursor-pointer shadow-xs"
-                >
-                  <span className="material-symbols-outlined text-sm">upload_file</span>
-                  <span>Bulk Upload CSV / JSON</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Compact Service Data Table */}
-            <div className="bg-white rounded-3xl border border-[#042C1D]/15 overflow-hidden shadow-sm">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-[#EEF2EE] border-b border-[#042C1D]/10 text-[10px] font-label-md uppercase tracking-wider text-[#042C1D] font-bold">
-                      <th className="py-3 px-4">Order</th>
-                      <th className="py-3 px-4">Service</th>
-                      <th className="py-3 px-4">Category / Subgroup</th>
-                      <th className="py-3 px-4 text-center">3-Tier Prices in INR (₹)</th>
-                      <th className="py-3 px-4 text-center">Visibility</th>
-                      <th className="py-3 px-4 text-center">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-outline-variant/20 text-xs">
-                    {services.map((item, idx) => (
-                      <tr key={item.id} className="hover:bg-[#F9F7F2] transition-colors">
-                        <td className="py-3 px-4 font-mono font-bold text-on-surface-variant text-[11px]">{item.displayOrder || idx + 1}</td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-[#EEF2EE] overflow-hidden shrink-0 border border-gold/30">
-                              <img src={item.imageUrl || '/images/service-1.jpg'} alt={item.name} className="w-full h-full object-cover" />
-                            </div>
-                            <div>
-                              <span className="font-bold text-[#042C1D] block">{item.name}</span>
-                              <span className="text-[10px] text-on-surface-variant line-clamp-1">{item.description}</span>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className="bg-[#FAF6F0] text-[#042C1D] px-2 py-0.5 rounded text-[10px] font-semibold border border-gold/30 block w-fit">{item.category}</span>
-                        </td>
-                        <td className="py-3 px-4 text-center font-mono font-semibold text-xs">
-                          ₹{item.pricing?.standard ?? 300} / ₹{item.pricing?.member ?? 150} / ₹{item.pricing?.vip ?? 100}
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <span className="px-2 py-1 bg-primary/10 text-primary rounded-full text-[10px] font-bold uppercase">Visible</span>
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <button
-                            onClick={() => {
-                              setEditingServiceId(item.id)
-                              setServiceForm({
-                                name: item.name,
-                                category: item.category || 'For Him',
-                                subcategory: item.subcategory || 'General',
-                                description: item.description || '',
-                                bestForTag: item.bestForTag || '',
-                                imageUrl: item.imageUrl || '/images/service-1.jpg',
-                                isVisible: true,
-                                standardPrice: item.pricing?.standard || 300,
-                                memberPrice: item.pricing?.member || 150,
-                                vipPrice: item.pricing?.vip || 100,
-                                durationMinutes: item.durationMinutes || 45
-                              })
-                            }}
-                            className="px-2.5 py-1 bg-[#042C1D] text-white rounded-lg text-[10px] font-bold uppercase cursor-pointer"
-                          >
-                            Edit
-                          </button>
                         </td>
                       </tr>
                     ))}
