@@ -1,0 +1,27 @@
+{
+  "heroTitle": "Organic Luxury for Your Hair & Soul",
+  "heroSubtitle": "Experience holistic botanical hair treatments crafted with pure, sustainably-sourced organic ingredients.",
+  "tagline": "ORGANIC LUXURY SANCTUARY",
+  "bannerImage": "/images/hero-banner.jpg",
+  "servicesGroup": [
+    {
+      "id": "grp-1",
+      "name": "Sanctuary Hair Rituals",
+      "description": "Holistic organic treatments tailored for scalp vitality.",
+      "sortOrder": 1,
+      "items": [
+        { "id": "srv-1", "name": "Botanical Hair & Scalp Treatment", "description": "Deep nourishing mask with herbal infusions.", "duration": 60, "basePrice": 120, "memberPrice": 100, "vipPrice": 85, "imageUrl": "/images/service-1.jpg" },
+        { "id": "srv-2", "name": "Organic Glossing & Cuticle Repair", "description": "Plant-derived gloss restoration for ultimate shine.", "duration": 45, "basePrice": 95, "memberPrice": 80, "vipPrice": 70, "imageUrl": "/images/service-2.jpg" }
+      ]
+    },
+    {
+      "id": "grp-2",
+      "name": "Botanical Colouring",
+      "description": "Ammonia-free organic pigment transformation.",
+      "sortOrder": 2,
+      "items": [
+        { "id": "srv-3", "name": "Balayage Ritual & Tonal Glaze", "description": "Hand-painted organic highlight techniques.", "duration": 120, "basePrice": 220, "memberPrice": 190, "vipPrice": 160, "imageUrl": "/images/service-3.jpg" }
+      ]
+    }
+  ]
+}
