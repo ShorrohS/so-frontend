@@ -1,7 +1,7 @@
 import React from 'react'
 import Logo from './Logo'
 
-export default function Footer({ onOpenAdminModal }) {
+export default function Footer({ onNavigate }) {
   return (
     <footer className="bg-[#F9F7F2] w-full py-stack-lg flex flex-col md:flex-row justify-between items-center px-margin-mobile md:px-margin-desktop gap-stack-md flat no shadows border-t border-gold/20">
       <a href="#" className="opacity-90 hover:opacity-100 transition-opacity">
@@ -19,9 +19,9 @@ export default function Footer({ onOpenAdminModal }) {
           Philosophy
         </a>
 
-        {/* Dedicated Admin Access Badge Button (#FAF6F0 background, #042C1D text styling) */}
+        {/* Dedicated Standalone Admin Access Badge Button (#FAF6F0 background, #042C1D text styling) */}
         <button
-          onClick={onOpenAdminModal}
+          onClick={() => onNavigate ? onNavigate('/admin/dashboard') : (window.location.hash = '#/admin/dashboard')}
           className="bg-[#FAF6F0] text-[#042C1D] hover:bg-[#042C1D] hover:text-[#FAF6F0] border border-[#042C1D]/30 px-3.5 py-1.5 rounded-full text-xs uppercase tracking-wider font-semibold transition-all duration-300 shadow-xs flex items-center gap-1.5 cursor-pointer"
         >
           <span className="material-symbols-outlined text-sm">admin_panel_settings</span>

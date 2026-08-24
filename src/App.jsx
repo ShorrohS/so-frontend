@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Header from './components/Header'
 import Hero from './components/Hero'
 import MembershipForm from './components/MembershipForm'
@@ -8,10 +8,35 @@ import Footer from './components/Footer'
 import AuthModal from './components/AuthModal'
 import BookingModal from './components/BookingModal'
 import UserProfileModal from './components/UserProfileModal'
-import AdminAuthModal from './components/AdminAuthModal'
-import AdminDashboardModal from './components/AdminDashboardModal'
+import AdminLoginPage from './pages/AdminLoginPage'
+import AdminDashboardPage from './pages/AdminDashboardPage'
 
 export default function App() {
+  // Simple, lightweight route state (supports window.location.pathname / hash)
+  const [currentRoute, setCurrentRoute] = useState(() => {
+    const hash = window.location.hash.replace('#', '')
+    if (hash === '/admin/login' || window.location.pathname === '/admin/login') return '/admin/login'
+    if (hash === '/admin/dashboard' || window.location.pathname === '/admin/dashboard') return '/admin/dashboard'
+    return '/'
+  })
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '')
+      if (hash === '/admin/login') setCurrentRoute('/admin/login')
+      else if (hash === '/admin/dashboard') setCurrentRoute('/admin/dashboard')
+      else if (hash === '/' || hash === '') setCurrentRoute('/')
+    }
+    window.addEventListener('hashchange', handleHashChange)
+    return () => window.removeEventListener('hashchange', handleHashChange)
+  }, [])
+
+  const navigate = (path) => {
+    setCurrentRoute(path)
+    window.location.hash = `#${path}`
+  }
+
+  // Client User State
   const [user, setUser] = useState(() => {
     try {
       const stored = localStorage.getItem('so_user')
@@ -21,7 +46,7 @@ export default function App() {
     }
   })
 
-  // Isolated Admin Session state
+  // Isolated Admin Session State
   const [admin, setAdmin] = useState(() => {
     try {
       const stored = localStorage.getItem('so_admin')
@@ -34,10 +59,8 @@ export default function App() {
   const [authModal, setAuthModal] = useState({ isOpen: false, mode: 'login' })
   const [isBookingOpen, setIsBookingOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
-  const [isAdminAuthOpen, setIsAdminAuthOpen] = useState(false)
-  const [isAdminDashboardOpen, setIsAdminDashboardOpen] = useState(false)
 
-  // CMS Settings State
+  // Dynamic CMS Settings State
   const [cmsSettings, setCmsSettings] = useState({
     heroTitle: 'Organic Luxury for Your Hair & Soul',
     heroSubtitle: 'Experience holistic botanical hair treatments crafted with pure organic ingredients.',
@@ -52,19 +75,17 @@ export default function App() {
     } catch {}
   }
 
-  const handleAdminSuccess = (adminData) => {
+  const handleAdminLogin = (adminData) => {
     const adminObj = adminData.admin || { username: 'admin', role: 'Super Admin' }
     setAdmin(adminObj)
     try {
       localStorage.setItem('so_admin', JSON.stringify(adminObj))
     } catch {}
-    setIsAdminDashboardOpen(true)
   }
 
   const handleAdminLogout = () => {
     setAdmin(null)
     localStorage.removeItem('so_admin')
-    setIsAdminDashboardOpen(false)
   }
 
   const handleLogout = () => {
@@ -114,9 +135,35 @@ export default function App() {
     } catch {}
   }
 
+  // --- ROUTE SWITCHER ---
+
+  // 1. Standalone Admin Login View (/admin/login)
+  if (currentRoute === '/admin/login') {
+    return (
+      <AdminLoginPage
+        onAdminLogin={handleAdminLogin}
+        onNavigate={navigate}
+      />
+    )
+  }
+
+  // 2. Standalone Admin Dashboard View (/admin/dashboard with Route Guard)
+  if (currentRoute === '/admin/dashboard') {
+    return (
+      <AdminDashboardPage
+        admin={admin}
+        cmsSettings={cmsSettings}
+        onSaveCMS={handleSaveCMS}
+        onAddService={handleAddService}
+        onAdminLogout={handleAdminLogout}
+        onNavigate={navigate}
+      />
+    )
+  }
+
+  // 3. Public Landing Page View (/)
   return (
     <div className="min-h-screen flex flex-col font-body-md text-body-md bg-[#F9F7F2]">
-      {/* Admin Sanctuary Control Bar (Visible when Admin logged in) */}
       {admin && (
         <div className="bg-[#042C1D] text-[#FAF6F0] px-4 py-2 text-xs font-semibold flex justify-between items-center z-50 border-b border-gold/30">
           <div className="flex items-center gap-2">
@@ -125,10 +172,10 @@ export default function App() {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setIsAdminDashboardOpen(true)}
+              onClick={() => navigate('/admin/dashboard')}
               className="bg-gold text-[#042C1D] px-3 py-1 rounded-full text-[10px] uppercase font-bold tracking-wider hover:opacity-90 transition-opacity cursor-pointer"
             >
-              CMS & 3-Tier Pricing Sanctuary
+              Open Admin Sanctuary Dashboard
             </button>
             <button
               onClick={handleAdminLogout}
@@ -153,7 +200,7 @@ export default function App() {
         <Philosophy />
       </main>
 
-      <Footer onOpenAdminModal={() => setIsAdminAuthOpen(true)} />
+      <Footer onNavigate={navigate} />
 
       <AuthModal
         isOpen={authModal.isOpen}
@@ -173,20 +220,6 @@ export default function App() {
         onUpdateProfile={handleUpdateProfile}
         onLogout={handleLogout}
         onClose={() => setIsProfileOpen(false)}
-      />
-
-      <AdminAuthModal
-        isOpen={isAdminAuthOpen}
-        onAdminSuccess={handleAdminSuccess}
-        onClose={() => setIsAdminAuthOpen(false)}
-      />
-
-      <AdminDashboardModal
-        isOpen={isAdminDashboardOpen}
-        cmsSettings={cmsSettings}
-        onSaveCMS={handleSaveCMS}
-        onAddService={handleAddService}
-        onClose={() => setIsAdminDashboardOpen(false)}
       />
     </div>
   )
