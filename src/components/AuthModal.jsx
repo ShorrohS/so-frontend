@@ -16,7 +16,7 @@ export default function AuthModal({ isOpen, mode = 'login', onAuthSuccess, onClo
 
     const path = activeTab === 'login' ? '/api/v1/auth/login' : '/api/v1/auth/register'
     const payload = JSON.stringify({
-      username: formState.username,
+      username: formState.username.trim(),
       password: formState.password
     })
 
@@ -29,7 +29,6 @@ export default function AuthModal({ isOpen, mode = 'login', onAuthSuccess, onClo
         body: payload
       })
 
-      // If relative path fails (405 S3 Method Not Allowed, 404, 403, or XML error), target API server directly
       const contentType = response.headers.get('content-type') || ''
       if (!response.ok && (response.status === 405 || response.status === 404 || response.status === 403 || !contentType.includes('application/json'))) {
         response = await fetch(`${apiBase}${path}`, {
@@ -51,7 +50,6 @@ export default function AuthModal({ isOpen, mode = 'login', onAuthSuccess, onClo
         setErrorMsg(message)
       }
     } catch (err) {
-      // Resilient local API fallback
       try {
         const fallbackRes = await fetch(`http://localhost:3000${path}`, {
           method: 'POST',
@@ -63,9 +61,13 @@ export default function AuthModal({ isOpen, mode = 'login', onAuthSuccess, onClo
           onAuthSuccess(data.user)
           onClose()
           return
+        } else if (data.message) {
+          setErrorMsg(data.message)
+          return
         }
       } catch {}
-      setErrorMsg('Invalid username or password. Please check your credentials or register.')
+
+      setErrorMsg(activeTab === 'login' ? 'Invalid username or password.' : 'Registration error. Please try another username.')
     } finally {
       setIsLoading(false)
     }
@@ -127,7 +129,7 @@ export default function AuthModal({ isOpen, mode = 'login', onAuthSuccess, onClo
             <label className="block text-xs font-label-md uppercase tracking-wider text-on-surface-variant mb-1">Username</label>
             <input
               required
-              className="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-xl px-4 py-2.5 focus:border-[#D4AF37] outline-none text-sm"
+              className="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-xl px-4 py-2.5 focus:border-[#D4AF37] outline-none text-sm text-[#042C1D]"
               placeholder="Enter your username"
               type="text"
               value={formState.username}
@@ -139,7 +141,7 @@ export default function AuthModal({ isOpen, mode = 'login', onAuthSuccess, onClo
             <label className="block text-xs font-label-md uppercase tracking-wider text-on-surface-variant mb-1">Password</label>
             <input
               required
-              className="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-xl px-4 py-2.5 focus:border-[#D4AF37] outline-none text-sm"
+              className="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-xl px-4 py-2.5 focus:border-[#D4AF37] outline-none text-sm text-[#042C1D]"
               placeholder="••••••••"
               type="password"
               value={formState.password}
@@ -150,7 +152,7 @@ export default function AuthModal({ isOpen, mode = 'login', onAuthSuccess, onClo
           <button
             type="submit"
             disabled={isLoading}
-            className="bg-secondary text-on-secondary py-3 rounded-full font-label-md uppercase tracking-wider text-xs hover:bg-on-secondary-fixed-variant transition-colors mt-2 border border-gold/30 shadow-sm"
+            className="bg-secondary text-on-secondary py-3 rounded-full font-label-md uppercase tracking-wider text-xs hover:bg-on-secondary-fixed-variant transition-colors mt-2 border border-gold/30 shadow-sm cursor-pointer"
           >
             {isLoading ? 'Processing...' : activeTab === 'login' ? 'Access Account' : 'Register Account'}
           </button>
