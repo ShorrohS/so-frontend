@@ -17,12 +17,25 @@ export default function Header({ user, onOpenAuthModal, onOpenProfileModal, onNa
           >
             Services
           </button>
+
           <a className="text-on-surface-variant hover:text-primary transition-colors duration-300 font-medium tracking-wide" href="#membership">
             Membership
           </a>
+
           <a className="text-on-surface-variant hover:text-primary transition-colors duration-300 font-medium tracking-wide" href="#philosophy">
             Philosophy
           </a>
+
+          {/* Promoted Top Header Navigation Link for Authenticated Users */}
+          {user && (
+            <button
+              onClick={onOpenProfileModal}
+              className="text-[#042C1D] font-bold tracking-wide hover:text-[#D4AF37] transition-colors duration-300 cursor-pointer bg-[#D4AF37]/15 border border-[#D4AF37]/40 px-3.5 py-1 rounded-full text-xs font-label-md uppercase tracking-wider flex items-center gap-1.5 shadow-xs"
+            >
+              <span className="material-symbols-outlined text-xs text-[#D4AF37]">spa</span>
+              <span>My Space</span>
+            </button>
+          )}
         </nav>
 
         {/* Right Auth / Greeting Component */}

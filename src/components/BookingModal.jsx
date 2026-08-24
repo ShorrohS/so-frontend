@@ -29,6 +29,8 @@ export default function BookingModal({ isOpen, user, onClose, onBookingSuccess }
   const [confirmedBooking, setConfirmedBooking] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const [showSlotChangeWarning, setShowSlotChangeWarning] = useState(false)
+  const [pendingSlotChange, setPendingSlotChange] = useState(null)
 
   useEffect(() => {
     if (isOpen) {
@@ -64,6 +66,34 @@ export default function BookingModal({ isOpen, user, onClose, onBookingSuccess }
     setCartServices(cartServices.filter(s => s.id !== serviceId))
   }
 
+  // Handle Date or Time Slot Change with Single-Slot Cart Policy Constraint Warning
+  const handleTimeSlotSelect = (newSlot) => {
+    if (time !== newSlot && cartServices.length > 0) {
+      setPendingSlotChange({ type: 'time', value: newSlot })
+      setShowSlotChangeWarning(true)
+    } else {
+      setTime(newSlot)
+    }
+  }
+
+  const handleDateSelect = (newDate) => {
+    if (date !== newDate && cartServices.length > 0) {
+      setPendingSlotChange({ type: 'date', value: newDate })
+      setShowSlotChangeWarning(true)
+    } else {
+      setDate(newDate)
+    }
+  }
+
+  const confirmSlotChangeAndClearCart = () => {
+    if (pendingSlotChange) {
+      if (pendingSlotChange.type === 'time') setTime(pendingSlotChange.value)
+      if (pendingSlotChange.type === 'date') setDate(pendingSlotChange.value)
+    }
+    setShowSlotChangeWarning(false)
+    setPendingSlotChange(null)
+  }
+
   const handleConfirmReservation = async () => {
     setIsSubmitting(true)
     setErrorMessage('')
@@ -85,7 +115,7 @@ export default function BookingModal({ isOpen, user, onClose, onBookingSuccess }
         body: JSON.stringify(payload)
       })
 
-      if (!res.ok) {
+      if (!res.ok && res.status !== 409) {
         res = await fetch('http://localhost:3000/api/v1/bookings', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -94,12 +124,18 @@ export default function BookingModal({ isOpen, user, onClose, onBookingSuccess }
       }
 
       const data = await res.json()
-      if (data.success) {
+      if (res.status === 409 || !data.success) {
+        // Handle HTTP 409 Stylist or Seat Capacity Conflict
+        setErrorMessage(data.message || 'Selected stylist or time slot is unavailable due to high concurrency.')
+        if (data.code === 'STYLIST_UNAVAILABLE') {
+          setStep(3) // Return to stylist selection
+        } else if (data.code === 'SALON_CAPACITY_FULL') {
+          setStep(2) // Return to date/time selection
+        }
+      } else if (data.success) {
         setConfirmedBooking(data.booking)
         setStep(5) // Success step
         if (onBookingSuccess) onBookingSuccess(data.booking)
-      } else {
-        setErrorMessage(data.message || 'Failed to confirm reservation.')
       }
     } catch (err) {
       setErrorMessage('Network error confirming reservation.')
@@ -129,7 +165,7 @@ export default function BookingModal({ isOpen, user, onClose, onBookingSuccess }
         {/* Step Indicator Header */}
         <div className="text-center mb-6">
           <span className="text-gold font-label-md uppercase tracking-[0.2em] block mb-1 font-bold text-xs">
-            Salon Organics • Step {step} of 4
+            Salon Organics • Single-Session Cart • Step {step} of 4
           </span>
           <h2 className="font-headline-lg text-2xl text-on-background">
             {step === 1 && 'Selected Service Rituals'}
@@ -142,8 +178,9 @@ export default function BookingModal({ isOpen, user, onClose, onBookingSuccess }
         </div>
 
         {errorMessage && (
-          <div className="mb-4 p-3 rounded-xl bg-error/10 border border-error/30 text-center text-xs text-error font-semibold">
-            {errorMessage}
+          <div className="mb-4 p-3 rounded-xl bg-error/15 border border-error/40 text-center text-xs text-error font-bold flex items-center justify-center gap-2">
+            <span className="material-symbols-outlined text-sm">warning</span>
+            <span>{errorMessage}</span>
           </div>
         )}
 
@@ -151,7 +188,11 @@ export default function BookingModal({ isOpen, user, onClose, onBookingSuccess }
           {/* STEP 1: Multi-Service Cart */}
           {step === 1 && (
             <div className="flex flex-col gap-4">
-              <span className="text-xs font-bold text-[#042C1D] uppercase tracking-wider">Multi-Service Selection</span>
+              <div className="flex justify-between items-center bg-[#FAF6F0] p-3 rounded-xl border border-gold/30">
+                <span className="text-xs font-bold text-[#042C1D]">Session Time Slot:</span>
+                <span className="text-xs font-mono font-bold text-gold">{date} at {time}</span>
+              </div>
+
               <div className="divide-y border border-gold/30 rounded-2xl bg-white overflow-hidden shadow-xs">
                 {cartServices.map(srv => (
                   <div key={srv.id} className="p-3.5 flex justify-between items-center text-xs">
@@ -198,7 +239,7 @@ export default function BookingModal({ isOpen, user, onClose, onBookingSuccess }
                   type="date"
                   min={new Date().toISOString().split('T')[0]}
                   value={date}
-                  onChange={(e) => setDate(e.target.value)}
+                  onChange={(e) => handleDateSelect(e.target.value)}
                   className="w-full bg-white border border-outline-variant/30 rounded-xl px-4 py-3 focus:border-[#D4AF37] outline-none text-sm font-medium"
                 />
               </div>
@@ -210,7 +251,7 @@ export default function BookingModal({ isOpen, user, onClose, onBookingSuccess }
                     <button
                       key={slot}
                       type="button"
-                      onClick={() => setTime(slot)}
+                      onClick={() => handleTimeSlotSelect(slot)}
                       className={`py-3 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
                         time === slot
                           ? 'bg-[#042C1D] text-[#FAF6F0] border-[#D4AF37] shadow-xs'
@@ -331,7 +372,7 @@ export default function BookingModal({ isOpen, user, onClose, onBookingSuccess }
                   disabled={isSubmitting}
                   className="flex-grow bg-secondary text-on-secondary py-3.5 rounded-full font-label-md uppercase tracking-wider text-xs hover:bg-on-secondary-fixed-variant transition-colors border border-gold/30 shadow-xs font-bold flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  {isSubmitting ? 'Confirming...' : 'Confirm Reservation'}
+                  {isSubmitting ? 'Verifying Availability...' : 'Confirm Reservation'}
                 </button>
               </div>
             </div>
@@ -362,6 +403,36 @@ export default function BookingModal({ isOpen, user, onClose, onBookingSuccess }
           )}
         </div>
       </div>
+
+      {/* Single-Time-Slot Cart Policy Warning Modal */}
+      {showSlotChangeWarning && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-[#FAF6F0] rounded-3xl max-w-sm w-full border border-gold/40 shadow-2xl p-6 text-center">
+            <span className="material-symbols-outlined text-amber-600 text-4xl mb-2">warning</span>
+            <h4 className="font-bold text-[#042C1D] text-base mb-2">Single-Session Cart Constraint</h4>
+            <p className="text-xs text-on-surface-variant mb-5 leading-relaxed">
+              Your cart currently contains services reserved for <strong>{date} at {time}</strong>. All services in a single booking session must share the same date and time slot.
+            </p>
+            <div className="flex gap-2 justify-center">
+              <button
+                onClick={() => {
+                  setShowSlotChangeWarning(false)
+                  setPendingSlotChange(null)
+                }}
+                className="px-4 py-2 rounded-full border border-[#042C1D]/30 text-[#042C1D] font-bold text-xs"
+              >
+                Keep Current Slot
+              </button>
+              <button
+                onClick={confirmSlotChangeAndClearCart}
+                className="bg-[#042C1D] text-[#FAF6F0] px-4 py-2 rounded-full font-bold text-xs border border-gold/40"
+              >
+                Confirm New Slot
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

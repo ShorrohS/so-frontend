@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import catalogueData from '../data/serviceCatalogue.json'
 
 export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAddService, onAdminLogout, onNavigate }) {
-  const [activeTab, setActiveTab] = useState('services') // 'services' | 'bookings' | 'cms' | 'users'
+  const [activeTab, setActiveTab] = useState('salon') // 'salon' | 'services' | 'bookings' | 'cms' | 'users'
   const [toast, setToast] = useState('')
 
   // Catalog State
@@ -26,6 +26,20 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
     bookingDate: '',
     bookingTime: '',
     stylistName: ''
+  })
+
+  // My Salon Admin State (Stylists & Capacity)
+  const [salonCapacity, setSalonCapacity] = useState({
+    totalSeats: 6,
+    maxConcurrentBookings: 6
+  })
+  const [stylistsList, setStylistsList] = useState([])
+  const [newStylistForm, setNewStylistForm] = useState({
+    name: '',
+    specialization: 'Organic Grooming & Styling',
+    photoUrl: '/images/stylist-any.jpg',
+    description: 'Master artisan committed to holistic hair wellness.',
+    isActive: true
   })
 
   // Single Item Form State
@@ -65,6 +79,21 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
       onNavigate('/admin/login')
     }
   }, [admin, onNavigate])
+
+  // Fetch Services, Bookings & My Salon
+  const fetchSalonData = async () => {
+    try {
+      let res = await fetch('/api/v1/admin/salon')
+      if (!res.ok) {
+        res = await fetch('http://localhost:3000/api/v1/admin/salon')
+      }
+      const data = await res.json()
+      if (data.success) {
+        if (data.capacity) setSalonCapacity(data.capacity)
+        if (Array.isArray(data.stylists)) setStylistsList(data.stylists)
+      }
+    } catch {}
+  }
 
   // Flatten serviceCatalogue.json for Client Fallback (47 items)
   const getFallbackServices = () => {
@@ -119,7 +148,6 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
     return list
   }
 
-  // Fetch Services (with Fallback to Complete Catalogue)
   const fetchServices = async () => {
     try {
       const query = new URLSearchParams({
@@ -142,7 +170,6 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
       }
     } catch {}
 
-    // Fallback using client catalogue dataset
     let fallback = getFallbackServices()
     const searchLower = search.toLowerCase().trim()
     const categoryLower = selectedCategory.toLowerCase().trim()
@@ -183,13 +210,99 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
   }
 
   useEffect(() => {
+    if (activeTab === 'salon') fetchSalonData()
     if (activeTab === 'services') fetchServices()
     if (activeTab === 'bookings') fetchBookings()
   }, [activeTab, page, search, selectedCategory, bookingStatusFilter, bookingSearch])
 
   if (!admin) return null
 
-  // Handle Admin Booking Status Update
+  // Handle Salon Capacity Update
+  const handleSaveCapacity = async () => {
+    try {
+      let res = await fetch('/api/v1/admin/salon/capacity', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(salonCapacity)
+      })
+      if (!res.ok) {
+        res = await fetch('http://localhost:3000/api/v1/admin/salon/capacity', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(salonCapacity)
+        })
+      }
+      const data = await res.json()
+      if (data.success) {
+        setToast('Salon Seat Capacity updated!')
+        setTimeout(() => setToast(''), 3000)
+      }
+    } catch {
+      setToast('Failed to update capacity.')
+      setTimeout(() => setToast(''), 3000)
+    }
+  }
+
+  // Handle Create Stylist Submit
+  const handleCreateStylist = async (e) => {
+    e.preventDefault()
+    if (!newStylistForm.name) return
+    try {
+      let res = await fetch('/api/v1/admin/stylists', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newStylistForm)
+      })
+      if (!res.ok) {
+        res = await fetch('http://localhost:3000/api/v1/admin/stylists', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newStylistForm)
+        })
+      }
+      const data = await res.json()
+      if (data.success) {
+        setToast(`New Stylist "${data.stylist.name}" added to Atelier!`)
+        setNewStylistForm({
+          name: '',
+          specialization: 'Organic Grooming & Styling',
+          photoUrl: '/images/stylist-any.jpg',
+          description: 'Master artisan committed to holistic hair wellness.',
+          isActive: true
+        })
+        fetchSalonData()
+        setTimeout(() => setToast(''), 3000)
+      }
+    } catch {
+      setToast('Failed to add stylist.')
+      setTimeout(() => setToast(''), 3000)
+    }
+  }
+
+  // Handle Toggle Stylist Active Status
+  const handleToggleStylistActive = async (stylistId, currentActive) => {
+    try {
+      let res = await fetch(`/api/v1/admin/stylists/${stylistId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: !currentActive })
+      })
+      if (!res.ok) {
+        res = await fetch(`http://localhost:3000/api/v1/admin/stylists/${stylistId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isActive: !currentActive })
+        })
+      }
+      const data = await res.json()
+      if (data.success) {
+        setStylistsList(stylistsList.map(s => s.id === stylistId ? { ...s, isActive: !currentActive } : s))
+        setToast(`Stylist active status updated.`)
+        setTimeout(() => setToast(''), 3000)
+      }
+    } catch {}
+  }
+
   const handleUpdateBookingStatus = async (bookingId, newStatus) => {
     try {
       let res = await fetch(`/api/v1/admin/bookings/${bookingId}`, {
@@ -254,57 +367,6 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
     }
   }
 
-  // Handle Single Service Creation or Edit Submit
-  const handleServiceSubmit = async (e) => {
-    e.preventDefault()
-    try {
-      const payload = {
-        name: serviceForm.name,
-        category: serviceForm.category,
-        subcategory: serviceForm.subcategory,
-        description: serviceForm.description,
-        bestForTag: serviceForm.bestForTag,
-        imageUrl: serviceForm.imageUrl,
-        isVisible: serviceForm.isVisible,
-        durationMinutes: parseInt(serviceForm.durationMinutes) || 45,
-        pricing: {
-          standard: parseFloat(serviceForm.standardPrice) || 300,
-          member: parseFloat(serviceForm.memberPrice) || 150,
-          vip: parseFloat(serviceForm.vipPrice) || 100
-        }
-      }
-
-      let url = '/api/v1/admin/services'
-      let method = 'POST'
-      if (editingServiceId) {
-        url = `/api/v1/admin/services/${editingServiceId}`
-        method = 'PUT'
-      }
-
-      let res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      })
-
-      if (!res.ok) {
-        res = await fetch(`http://localhost:3000${url}`, {
-          method,
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        })
-      }
-
-      setToast(editingServiceId ? 'Service updated successfully!' : 'New service item published!')
-      setEditingServiceId(null)
-      fetchServices()
-      setTimeout(() => setToast(''), 3000)
-    } catch {
-      setToast('Service saved locally.')
-      setTimeout(() => setToast(''), 3000)
-    }
-  }
-
   const handleCmsSubmit = async (e) => {
     e.preventDefault()
     try {
@@ -361,6 +423,16 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
         {/* Navigation Tabs */}
         <div className="flex border-b border-outline-variant/30 bg-[#EEF2EE] rounded-2xl overflow-hidden p-1 gap-1 border">
           <button
+            onClick={() => setActiveTab('salon')}
+            className={`flex-1 py-3 text-center font-label-md uppercase tracking-wider text-xs transition-all duration-300 rounded-xl font-bold flex items-center justify-center gap-2 cursor-pointer ${
+              activeTab === 'salon' ? 'bg-[#042C1D] text-[#FAF6F0] shadow-sm' : 'text-on-surface-variant hover:text-[#042C1D]'
+            }`}
+          >
+            <span className="material-symbols-outlined text-base">storefront</span>
+            <span>My Salon</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('services')}
             className={`flex-1 py-3 text-center font-label-md uppercase tracking-wider text-xs transition-all duration-300 rounded-xl font-bold flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === 'services' ? 'bg-[#042C1D] text-[#FAF6F0] shadow-sm' : 'text-on-surface-variant hover:text-[#042C1D]'
@@ -401,7 +473,136 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
           </button>
         </div>
 
-        {/* Tab 1: Service Catalog Management */}
+        {/* Tab 1: My Salon (Stylists & Capacity) */}
+        {activeTab === 'salon' && (
+          <div className="flex flex-col gap-6">
+            {/* Salon Capacity & Station Setup Card */}
+            <div className="bg-white rounded-3xl border border-[#042C1D]/15 p-6 md:p-8 shadow-sm">
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h3 className="font-headline-lg text-xl text-[#042C1D] font-bold">Salon Capacity & Working Seats Setup</h3>
+                  <p className="text-xs text-on-surface-variant">Configure total styling chairs/stations. Rejects client bookings when seat capacity is full.</p>
+                </div>
+                <span className="bg-[#FAF6F0] text-gold px-3.5 py-1 rounded-full text-xs font-bold font-mono border border-gold/30">
+                  Current Capacity: {salonCapacity.totalSeats} Working Seats
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl">
+                <div>
+                  <label className="block text-xs font-label-md uppercase tracking-wider text-[#042C1D] mb-1 font-bold">Total Working Seats / Chairs</label>
+                  <input
+                    type="number"
+                    min={1}
+                    className="w-full bg-[#F9F7F2] border border-outline-variant/30 rounded-xl px-4 py-2.5 text-sm font-bold text-[#042C1D]"
+                    value={salonCapacity.totalSeats}
+                    onChange={(e) => setSalonCapacity({ ...salonCapacity, totalSeats: parseInt(e.target.value) || 1 })}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-label-md uppercase tracking-wider text-[#042C1D] mb-1 font-bold">Max Concurrent Slot Bookings</label>
+                  <input
+                    type="number"
+                    min={1}
+                    className="w-full bg-[#F9F7F2] border border-outline-variant/30 rounded-xl px-4 py-2.5 text-sm font-bold text-[#042C1D]"
+                    value={salonCapacity.maxConcurrentBookings}
+                    onChange={(e) => setSalonCapacity({ ...salonCapacity, maxConcurrentBookings: parseInt(e.target.value) || 1 })}
+                  />
+                </div>
+              </div>
+
+              <button
+                onClick={handleSaveCapacity}
+                className="mt-4 bg-[#042C1D] text-[#FAF6F0] px-6 py-2.5 rounded-full font-bold text-xs hover:bg-[#084D34] transition-all border border-[#D4AF37]/40 shadow-xs cursor-pointer"
+              >
+                Save Capacity Configuration
+              </button>
+            </div>
+
+            {/* Stylists Atelier Management */}
+            <div className="bg-white rounded-3xl border border-[#042C1D]/15 p-6 md:p-8 shadow-sm">
+              <h3 className="font-headline-lg text-xl text-[#042C1D] font-bold mb-1">Stylists Atelier Directory</h3>
+              <p className="text-xs text-on-surface-variant mb-6">Manage professional team members, specializations, mapped services, and active booking availability.</p>
+
+              {/* Stylists List */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                {stylistsList.map(st => (
+                  <div key={st.id} className="p-4 rounded-2xl border border-gold/30 bg-[#FAF6F0] flex justify-between items-start gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-[#EEF2EE] overflow-hidden shrink-0 border border-gold/40">
+                        <span className="material-symbols-outlined text-[#042C1D] text-3xl flex items-center justify-center h-full">person</span>
+                      </div>
+                      <div>
+                        <span className="font-bold text-[#042C1D] text-sm block">{st.name}</span>
+                        <span className="text-[10px] text-gold font-semibold uppercase block">{st.specialization}</span>
+                        <span className="text-[10px] text-on-surface-variant line-clamp-1 mt-0.5">{st.description}</span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handleToggleStylistActive(st.id, st.isActive)}
+                      className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase cursor-pointer ${
+                        st.isActive !== false ? 'bg-primary/10 text-primary border border-primary/30' : 'bg-error/10 text-error border border-error/30'
+                      }`}
+                    >
+                      {st.isActive !== false ? 'Active' : 'Disabled'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Add New Stylist Form */}
+              <div className="bg-[#EEF2EE] p-6 rounded-2xl border border-[#042C1D]/15 max-w-2xl">
+                <h4 className="font-headline-md text-base text-[#042C1D] font-bold mb-3">Add New Professional Stylist</h4>
+                <form onSubmit={handleCreateStylist} className="flex flex-col gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-[#042C1D] mb-1">Stylist Name *</label>
+                      <input
+                        required
+                        className="w-full bg-white border border-outline-variant/30 rounded-xl px-3 py-2 text-xs text-[#042C1D]"
+                        placeholder="e.g. Master Artisan Vikram"
+                        value={newStylistForm.name}
+                        onChange={(e) => setNewStylistForm({ ...newStylistForm, name: e.target.value })}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase text-[#042C1D] mb-1">Specialization</label>
+                      <input
+                        className="w-full bg-white border border-outline-variant/30 rounded-xl px-3 py-2 text-xs text-[#042C1D]"
+                        placeholder="e.g. Organic Balayage & Scalp Health"
+                        value={newStylistForm.specialization}
+                        onChange={(e) => setNewStylistForm({ ...newStylistForm, specialization: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase text-[#042C1D] mb-1">Bio / Description</label>
+                    <textarea
+                      rows={2}
+                      className="w-full bg-white border border-outline-variant/30 rounded-xl px-3 py-2 text-xs text-[#042C1D]"
+                      placeholder="Brief overview of experience and techniques..."
+                      value={newStylistForm.description}
+                      onChange={(e) => setNewStylistForm({ ...newStylistForm, description: e.target.value })}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="bg-[#042C1D] text-[#FAF6F0] px-6 py-2.5 rounded-full font-bold text-xs border border-gold/40 self-start cursor-pointer shadow-xs"
+                  >
+                    Add Stylist to Directory
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 2: Service Catalog Management */}
         {activeTab === 'services' && (
           <div className="flex flex-col gap-6">
             <div className="bg-white rounded-3xl border border-[#042C1D]/15 p-6 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
@@ -535,7 +736,7 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
           </div>
         )}
 
-        {/* Tab 2: Bookings Atelier */}
+        {/* Tab 3: Bookings Atelier */}
         {activeTab === 'bookings' && (
           <div className="flex flex-col gap-6">
             <div className="bg-white rounded-3xl border border-[#042C1D]/15 p-6 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
@@ -655,7 +856,7 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
           </div>
         )}
 
-        {/* Tab 3: CMS Landing Page */}
+        {/* Tab 4: CMS Landing Page */}
         {activeTab === 'cms' && (
           <div className="bg-white rounded-3xl border border-[#042C1D]/15 p-6 md:p-8 shadow-sm">
             <h2 className="font-headline-lg text-xl text-[#042C1D] mb-1 font-bold">Landing Page CMS Editor</h2>
@@ -689,7 +890,7 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
           </div>
         )}
 
-        {/* Tab 4: User Tier Audit */}
+        {/* Tab 5: User Tier Audit */}
         {activeTab === 'users' && (
           <div className="bg-white rounded-3xl border border-[#042C1D]/15 p-6 md:p-8 shadow-sm">
             <h2 className="font-headline-lg text-xl text-[#042C1D] mb-4 font-bold">User Tier Audit & Registry</h2>
