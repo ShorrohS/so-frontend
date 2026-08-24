@@ -1,7 +1,15 @@
 import React from 'react'
 import Logo from './Logo'
 
-export default function Header({ user, onOpenAuthModal, onOpenProfileModal, onNavigate }) {
+export default function Header({ user, onOpenAuthModal, onNavigate }) {
+  const handleGoToMySpace = () => {
+    if (onNavigate) {
+      onNavigate('/my-space')
+    } else {
+      window.location.hash = '#/my-space'
+    }
+  }
+
   return (
     <header className="w-full top-0 sticky z-50 bg-[#F9F7F2]/90 backdrop-blur-sm flat no shadows border-b border-gold/10">
       <div className="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-stack-sm max-w-container-max mx-auto">
@@ -29,7 +37,7 @@ export default function Header({ user, onOpenAuthModal, onOpenProfileModal, onNa
           {/* Promoted Top Header Navigation Link for Authenticated Users */}
           {user && (
             <button
-              onClick={onOpenProfileModal}
+              onClick={handleGoToMySpace}
               className="text-[#042C1D] font-bold tracking-wide hover:text-[#D4AF37] transition-colors duration-300 cursor-pointer bg-[#D4AF37]/15 border border-[#D4AF37]/40 px-3.5 py-1 rounded-full text-xs font-label-md uppercase tracking-wider flex items-center gap-1.5 shadow-xs"
             >
               <span className="material-symbols-outlined text-xs text-[#D4AF37]">spa</span>
@@ -42,8 +50,8 @@ export default function Header({ user, onOpenAuthModal, onOpenProfileModal, onNa
         <div className="flex items-center">
           {user ? (
             <div
-              onClick={onOpenProfileModal}
-              title="Click to manage profile"
+              onClick={handleGoToMySpace}
+              title="Click to open My Space profile"
               className="cursor-pointer bg-surface-container-lowest border border-gold/40 hover:border-gold px-3.5 py-1.5 rounded-full shadow-xs flex items-center gap-1.5 transition-all duration-300"
             >
               <span className="material-symbols-outlined text-gold text-lg shrink-0">account_circle</span>
