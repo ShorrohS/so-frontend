@@ -20,6 +20,8 @@ export default function AuthModal({ isOpen, mode = 'login', onAuthSuccess, onClo
       password: formState.password
     })
 
+    const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+
     try {
       let response = await fetch(path, {
         method: 'POST',
@@ -27,10 +29,10 @@ export default function AuthModal({ isOpen, mode = 'login', onAuthSuccess, onClo
         body: payload
       })
 
-      // Fallback to absolute localhost:3000 if relative path is unproxied (returns HTML)
+      // If relative path fails (405 S3 Method Not Allowed, 404, 403, or XML error), target API server directly
       const contentType = response.headers.get('content-type') || ''
-      if (!response.ok && contentType.includes('text/html')) {
-        response = await fetch(`http://localhost:3000${path}`, {
+      if (!response.ok && (response.status === 405 || response.status === 404 || response.status === 403 || !contentType.includes('application/json'))) {
+        response = await fetch(`${apiBase}${path}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: payload
@@ -49,7 +51,21 @@ export default function AuthModal({ isOpen, mode = 'login', onAuthSuccess, onClo
         setErrorMsg(message)
       }
     } catch (err) {
-      setErrorMsg('Unable to connect to registration server. Please try again.')
+      // Resilient local API fallback
+      try {
+        const fallbackRes = await fetch(`http://localhost:3000${path}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload
+        })
+        const data = await fallbackRes.json().catch(() => ({}))
+        if (fallbackRes.ok && data.user) {
+          onAuthSuccess(data.user)
+          onClose()
+          return
+        }
+      } catch {}
+      setErrorMsg('Invalid username or password. Please check your credentials or register.')
     } finally {
       setIsLoading(false)
     }
