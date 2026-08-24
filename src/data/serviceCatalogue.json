@@ -1,0 +1,614 @@
+{
+  "catalogue": {
+    "brand": "Salon Organics",
+    "currency": "INR",
+    "currency_symbol": "₹",
+    "pricing_tiers": ["member", "offer", "standard"],
+    "lengths": ["Short", "Medium", "Long"],
+    "catalogue_footer": {
+      "text": "Thank you for choosing Salon Organics. All prices in Indian Rupees (₹) and subject to change.",
+      "membership_rule": "Member rates require active membership; seasonal offers apply for a limited period."
+    },
+    "categories": [
+      {
+        "id": "for-him",
+        "name": "For Him",
+        "display_label": "THE GENTLEMEN'S GROOMING",
+        "description": "Precision grooming, considered product rituals and impeccable hygiene — refined for the modern gentleman.",
+        "groups": [
+          {
+            "id": "the-signature-cut",
+            "name": "The Signature Cut",
+            "display_label": "THE SIGNATURE CUT",
+            "descriptor": "Precision cutting & cleansing rituals",
+            "services": [
+              {
+                "id": "classic-precision-cut",
+                "name": "Classic Precision Cut",
+                "description": "A tailored precision haircut shaped with UV-stabilised professional tools and finished with a refreshing cleanse, for effortless, well-defined style.",
+                "products": ["Stepon Professional", "Beaver Professional"],
+                "features": ["UV-stabilised professional tools", "Precision styling", "Signature cleanse"],
+                "pricing": { "member": 75, "offer": 180, "standard": 300 }
+              },
+              {
+                "id": "black-edition-cut",
+                "name": "Black Edition Cut",
+                "description": "Our precision cut elevated with a vegan cleansing ritual and considered finishing — a refined grooming experience with clean, conscious care.",
+                "products": ["Schwarzkopf Professional", "Kraft Pro", "Stepon Professional"],
+                "features": ["UV-stabilised professional tools", "Vegan cleansing ritual", "Precision styling"],
+                "pricing": { "member": 125, "offer": 300, "standard": 500 }
+              },
+              {
+                "id": "gold-edition-organic-cut",
+                "name": "Gold Edition Organic Cut",
+                "description": "The complete gentleman’s ritual: precision cutting paired with an organic botanical cleanse, leaving hair clean, nourished and beautifully polished.",
+                "products": ["Forest Essentials", "Amazon Series", "GK Hair", "Kraft Pro"],
+                "features": ["UV-stabilised tools", "Organic botanical cleanse", "Nourishing finish"],
+                "pricing": { "member": 300, "offer": 720, "standard": 1200 }
+              },
+              {
+                "id": "signature-cleanse-him",
+                "name": "Signature Cleanse",
+                "description": "A smoothing, shine-reviving hair cleanse — complimentary with every grooming service, with an optional nourishing conditioning finish.",
+                "products": ["Beaver Professional"],
+                "features": ["Smoothing cleanse", "Conditioning finish included", "Radiant shine"],
+                "pricing": { "member": "Complimentary", "offer": 0, "standard": 100 }
+              }
+            ]
+          },
+          {
+            "id": "the-beard-atelier",
+            "name": "The Beard Atelier",
+            "display_label": "THE BEARD ATELIER",
+            "descriptor": "Sculpting, line-up & warm-towel rituals",
+            "services": [
+              {
+                "id": "classic-beard-sculpt",
+                "name": "Classic Beard Sculpt",
+                "description": "Expert beard shaping and a clean, defined line-up using a UV-sterilised razor and a fresh single-use blade, for a comfortable, hygienic finish.",
+                "products": [],
+                "features": ["UV-sterilised razor", "Fresh single-use blade", "Precision line-up"],
+                "pricing": { "member": 50, "offer": 120, "standard": 200 }
+              },
+              {
+                "id": "black-edition-beard-ritual",
+                "name": "Black Edition Beard Ritual",
+                "description": "Precision beard sculpting enriched with a premium grooming kit and a warm-towel ritual that softens, soothes and refines every contour.",
+                "products": [],
+                "features": ["UV-sterilised razor • fresh blade", "Premium grooming kit", "Warm-towel ritual"],
+                "pricing": { "member": 100, "offer": 240, "standard": 400 }
+              },
+              {
+                "id": "gold-edition-organic-beard-ritual",
+                "name": "Gold Edition Organic Beard Ritual",
+                "description": "Our signature beard ritual, elevated with organic grooming essentials and a restorative warm-towel treatment — indulgent care for beard and skin alike.",
+                "products": ["Forest Essentials"],
+                "features": ["UV-sterilised razor • premium blade", "Warm-towel ritual", "Organic grooming kit"],
+                "pricing": { "member": 250, "offer": 600, "standard": 1000 }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "for-her",
+        "name": "For Her",
+        "display_label": "THE HAIR ATELIER",
+        "description": "Bespoke cutting and styling, guided by personal consultation and finished with premium, conscious haircare.",
+        "groups": [
+          {
+            "id": "cut-and-style",
+            "name": "Cut & Style",
+            "display_label": "CUT & STYLE",
+            "descriptor": "Consultation • precision • finishing",
+            "services": [
+              {
+                "id": "classic-cut-and-style",
+                "name": "Classic Cut & Style",
+                "description": "A personalised cut and blow-dry shaped with UV-sterilised professional tools and finished with a refreshing cleanse, for beautifully styled, healthy-looking hair.",
+                "products": ["Stepon Professional", "Beaver Professional"],
+                "features": ["Professional consultation", "UV-sterilised tools", "Signature cleanse & style"],
+                "pricing": { "member": 100, "offer": 240, "standard": 400 }
+              },
+              {
+                "id": "black-edition-cut-and-style",
+                "name": "Black Edition Cut & Style",
+                "description": "A precision cut and style elevated with a vegan cleansing ritual • refined shaping and clean, conscious care for a polished, lasting finish.",
+                "products": ["Schwarzkopf Professional", "Kraft Pro", "Beaver Professional"],
+                "features": ["Professional consultation", "Vegan cleansing ritual", "Precision cut & style"],
+                "pricing": { "member": 200, "offer": 480, "standard": 800 }
+              },
+              {
+                "id": "gold-edition-organic-cut-and-style",
+                "name": "Gold Edition Organic Cut & Style",
+                "description": "The complete atelier experience: bespoke cutting and styling with an organic botanical cleanse, leaving hair clean, nourished and radiant.",
+                "products": ["Forest Essentials", "Amazon Series", "GK Hair", "Kraft Pro"],
+                "features": ["Professional consultation", "Organic botanical cleanse", "Nourishing finish"],
+                "pricing": { "member": 300, "offer": 720, "standard": 1200 }
+              },
+              {
+                "id": "signature-cleanse-her",
+                "name": "Signature Cleanse",
+                "description": "A smoothing, shine-reviving hair cleanse • complimentary with every service, with an optional nourishing conditioning finish.",
+                "products": ["Beaver Professional"],
+                "features": ["Smoothing cleanse", "Conditioning finish included", "Radiant Shine"],
+                "pricing": { "member": "Complimentary", "offer": 0, "standard": 100 }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "colour-artistry",
+        "name": "Colour Artistry",
+        "display_label": "THE COLOUR STUDIO",
+        "description": "Expert colour, tailored to you with professional formulations and sealed with conditioning care. Prices vary by hair length: Short, Medium and Long.",
+        "groups": [
+          {
+            "id": "signature-colour",
+            "name": "Signature Colour",
+            "display_label": "SIGNATURE COLOUR",
+            "descriptor": "Schwarzkopf Professional • incl. cleanse & conditioner",
+            "services": [
+              {
+                "id": "root-revival-retouch",
+                "name": "Root Revival Retouch",
+                "description": "A seamless root retouch that restores depth and coverage, blended to your natural tone and finished with a nourishing cleanse and conditioner.",
+                "products": ["Schwarzkopf Professional"],
+                "features": ["Seamless root blend", "Full grey coverage", "Conditioning finish"],
+                "pricing": { "member": 150, "offer": 360, "standard": 600 }
+              },
+              {
+                "id": "global-colour-transformation",
+                "name": "Global Colour Transformation",
+                "description": "A full-length, single-tone colour transformation for uniform, luminous results • professionally applied and scaled with conditioning care.",
+                "products": ["Schwarzkopf Professional"],
+                "features": ["Professional colour consultation", "Full-length application", "Conditioning cleanse"],
+                "length_pricing": {
+                  "Short": { "member": 1000, "offer": 2400, "standard": 4000 },
+                  "Medium": { "member": 1750, "offer": 4200, "standard": 7000 },
+                  "Long": { "member": 2750, "offer": 6600, "standard": 11000 }
+                }
+              },
+              {
+                "id": "balayage-highlights",
+                "name": "Balayage Highlights",
+                "description": "Hand-painted highlights for soft, sun-kissed dimension --- a bespoke, free-hand technique that grows out beautifully and naturally.",
+                "products": ["Schwarzkopf Professional"],
+                "features": ["Free-hand hand-painting", "Natural grow-out", "Conditioning cleanse"],
+                "length_pricing": {
+                  "Short": { "member": 1250, "offer": 3000, "standard": 5000 },
+                  "Medium": { "member": 2000, "offer": 4800, "standard": 8000 },
+                  "Long": { "member": 3000, "offer": 7200, "standard": 12000 }
+                }
+              },
+              {
+                "id": "balayage-illumination",
+                "name": "Balayage Illumination",
+                "description": "A lighter, luminous balayage for elevated brightness and depth • delicately hand-painted for a radiant, multi-tonal finish.",
+                "products": ["Schwarzkopf Professional"],
+                "features": ["Elevated lightening", "Multi-tonal radiance", "Conditioning cleanse"],
+                "length_pricing": {
+                  "Short": { "member": 1500, "offer": 3600, "standard": 6000 },
+                  "Medium": { "member": 2250, "offer": 5400, "standard": 9000 },
+                  "Long": { "member": 3250, "offer": 7800, "standard": 13000 }
+                }
+              },
+              {
+                "id": "creative-colour-expression",
+                "name": "Creative Colour • Expression",
+                "description": "Bold, expressive fashion shades for creative, statement colour • vivid tones applied with precision for a striking, personalised look.",
+                "products": ["Vibrant fashion shades"],
+                "features": ["Vivid statement tones", "Precision application", "Single-strand option"],
+                "length_pricing": {
+                  "Short": { "member": 200, "offer": 480, "standard": 800 },
+                  "Medium": { "member": 300, "offer": 720, "standard": 1200 },
+                  "Long": { "member": 400, "offer": 960, "standard": 1600 },
+                  "Single Strand": { "member": 100, "offer": 240, "standard": 400 }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "hair-spa-rituals",
+        "name": "Hair Spa Rituals",
+        "display_label": "THE RITUAL COLLECTION",
+        "description": "Restorative scalp and hair rituals that cleanse, nourish and renew — each a moment of calm, crafted around your hair’s needs. Priced by length: Short, Medium, Long.",
+        "groups": [
+          {
+            "id": "nourishing-and-scalp-rituals",
+            "name": "Nourishing & Scalp Rituals",
+            "display_label": "NOURISHING & SCALP RITUALS",
+            "descriptor": "Schwarzkopf Professional",
+            "services": [
+              {
+                "id": "hydra-nourish-ritual",
+                "name": "Hydra Nourish Ritual",
+                "description": "A replenishing ritual powered by amino acids and a vitamin complex to hydrate, strengthen and restore softness to dry or stressed hair.",
+                "products": ["Schwarzkopf Professional"],
+                "features": ["Amino & vitamin complex", "Deep hydration", "Spa cleanse & condition"],
+                "length_pricing": {
+                  "Short": { "member": 900, "offer": 2160, "standard": 2600 },
+                  "Medium": { "member": 1000, "offer": 2400, "standard": 4000 },
+                  "Long": { "member": 1125, "offer": 2700, "standard": 4500 }
+                }
+              },
+              {
+                "id": "purifying-scalp-ritual-anti-dandruff",
+                "name": "Purifying Scalp Ritual • Anti-Dandruff",
+                "description": "A clarifying scalp ritual that soothes and rebalances, targeting flakiness and build-up for a fresh, comfortable and healthy-looking scalp.",
+                "products": ["Schwarzkopf Professional"],
+                "features": ["Anti-dandruff serum", "Scalp rebalancing", "Nourishing masque"],
+                "length_pricing": {
+                  "Short": { "member": 1000, "offer": 2400, "standard": 4000 },
+                  "Medium": { "member": 1125, "offer": 2700, "standard": 4500 },
+                  "Long": { "member": 1120, "offer": 3000, "standard": 5000 }
+                }
+              },
+              {
+                "id": "fortifying-scalp-ritual-anti-hairloss",
+                "name": "Fortifying Scalp Ritual • Anti-Hairloss",
+                "description": "A strengthening ritual that fortifies roots and revitalises the scalp with a targeted serum, supporting fuller, more resilient-looking hair.",
+                "products": ["Schwarzkopf Professional"],
+                "features": ["Anti-hairloss serum", "Root fortification", "Nourishing masque"],
+                "length_pricing": {
+                  "Short": { "member": 1000, "offer": 2400, "standard": 4000 },
+                  "Medium": { "member": 1125, "offer": 2700, "standard": 4500 },
+                  "Long": { "member": 1120, "offer": 3000, "standard": 5000 }
+                }
+              }
+            ]
+          },
+          {
+            "id": "prestige-and-organic-rituals",
+            "name": "Prestige & Organic Rituals",
+            "display_label": "PRESTIGE & ORGANIC RITUALS",
+            "descriptor": "Kérastase • Moroccanoil • Wella • Nashi Argan",
+            "services": [
+              {
+                "id": "luminous-oil-reflection-ritual",
+                "name": "Luminous Oil Reflection Ritual",
+                "description": "An illuminating oil therapy that smooths and boosts shine, leaving hair silky, reflective and beautifully conditioned.",
+                "products": ["Wella Professionals"],
+                "features": ["Oil reflection masque", "Radiant shine", "Smooth, silky finish"],
+                "length_pricing": {
+                  "Short": { "member": 1500, "offer": 3600, "standard": 6000 },
+                  "Medium": { "member": 1750, "offer": 4200, "standard": 7000 },
+                  "Long": { "member": 2250, "offer": 5400, "standard": 9000 }
+                }
+              },
+              {
+                "id": "fusion-intense-repair-ritual",
+                "name": "Fusion Intense Repair Ritual",
+                "description": "An intensive repair ritual with amino-infused care that rebuilds strength and resilience in weakened, overprocessed hair.",
+                "products": ["Wella Professionals"],
+                "features": ["Amino repair", "Strengthens weak hair", "Intense conditioning"],
+                "length_pricing": {
+                  "Short": { "member": 1500, "offer": 3600, "standard": 6000 },
+                  "Medium": { "member": 1750, "offer": 4200, "standard": 7000 },
+                  "Long": { "member": 2250, "offer": 5400, "standard": 9000 }
+                }
+              },
+              {
+                "id": "invigo-scalp-renewal-ritual",
+                "name": "Invigo Scalp Renewal Ritual",
+                "description": "A nutrient-rich scalp renewal that deeply nourishes and rebalances, leaving the scalp refreshed and hair replenished at the root.",
+                "products": ["Wella Professionals"],
+                "features": ["Nutrient-rich masque", "ScalpBalance serum", "Deep nourishment"],
+                "length_pricing": {
+                  "Short": { "member": 1500, "offer": 3600, "standard": 6000 },
+                  "Medium": { "member": 1750, "offer": 4200, "standard": 7000 },
+                  "Long": { "member": 2250, "offer": 5400, "standard": 9000 }
+                }
+              },
+              {
+                "id": "ultimate-smooth-ritual-omega-9",
+                "name": "Ultimate Smooth Ritual : Omega-9",
+                "description": "An Omega-9-enriched smoothing ritual crafted for dry, dull or frizz-prone hair — taming, softening and restoring manageable, glossy smoothness.",
+                "products": ["Wella Professionals"],
+                "features": ["Omega-9 enriched", "Anti-frizz smoothing", "Glossy softness"],
+                "length_pricing": {
+                  "Short": { "member": 2000, "offer": 4800, "standard": 8000 },
+                  "Medium": { "member": 2500, "offer": 6000, "standard": 10000 },
+                  "Long": { "member": 3000, "offer": 7200, "standard": 12000 }
+                }
+              },
+              {
+                "id": "moroccan-argan-restorative-ritual",
+                "name": "Moroccan Argan Restorative Ritual",
+                "description": "A luxurious restorative therapy rich in argan oil and vegetable proteins, deeply repairing and softening for lustrous, revitalised hair.",
+                "products": ["Moroccanoil"],
+                "features": ["Argan oil & vegetable protein", "Deep restoration", "Moisture repair"],
+                "length_pricing": {
+                  "Short": { "member": 3750, "offer": 9000, "standard": 15000 },
+                  "Medium": { "member": 4375, "offer": 10500, "standard": 17500 },
+                  "Long": { "member": 5000, "offer": 12000, "standard": 20000 }
+                }
+              },
+              {
+                "id": "nashi-argan",
+                "name": "Nashi Argan",
+                "description": "An organic argan ritual that nourishes and revitalises with botanical richness, delivering deep conditioning and a naturally luminous finish.",
+                "products": ["Nashi Argan"],
+                "features": ["Organic argan care", "Botanical nourishment", "Luminous finish"],
+                "length_pricing": {
+                  "Short": { "member": 3750, "offer": 9000, "standard": 15000 },
+                  "Medium": { "member": 4375, "offer": 10500, "standard": 17500 },
+                  "Long": { "member": 5000, "offer": 12000, "standard": 29000 }
+                }
+              },
+              {
+                "id": "kerastase-genesis-gloss-ritual-signature-prestige",
+                "name": "Kérastase Genesis Gloss Ritual • Signature Prestige",
+                "description": "Our most prestigious ritual: a Kérastase Genesis treatment that fortifies, glosses and revitalises for exceptional strength, softness and mirror-like shine.",
+                "products": ["Kérastase"],
+                "features": ["Anti-breakage fortification", "Glaze gloss finish", "Prestige experience"],
+                "length_pricing": {
+                  "Short": { "member": 7500, "offer": 18000, "standard": 30000 },
+                  "Medium": { "member": 10000, "offer": 24000, "standard": 17500 },
+                  "Long": { "member": 12500, "offer": 30000, "standard": 50000 }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "advanced-hair-therapies",
+        "name": "Transformation & Repair",
+        "display_label": "ADVANCED HAIR THERAPIES",
+        "description": "Bond, smoothing and structural therapies — advanced science and premium formulations for lasting, visible transformation.",
+        "groups": [
+          {
+            "id": "smoothing-and-bond-therapies",
+            "name": "Smoothing & Bond Therapies",
+            "display_label": "SMOOTHING & BOND THERAPIES",
+            "descriptor": "Priced by length where applicable",
+            "services": [
+              {
+                "id": "keratin-smoothing-therapy",
+                "name": "Keratin Smoothing Therapy",
+                "description": "A smoothing keratin therapy that relaxes frizz and restores manageability, scaling hair with a sleek, glossy and effectively styled finish.",
+                "products": ["Defabulous"],
+                "features": ["Fitis-smoothing Keratin", "Lasting manageability", "Repair cleanse & condition"],
+                "length_pricing": {
+                  "Short": { "member": 1250, "offer": 3000, "standard": 5000 },
+                  "Medium": { "member": 2500, "offer": 6000, "standard": 10000 },
+                  "Long": { "member": 3750, "offer": 9000, "standard": 15000 }
+                }
+              },
+              {
+                "id": "fibre-bond-rebuilding-therapy",
+                "name": "Fibre Bond Rebuilding Therapy",
+                "description": "A bond-rebuilding therapy that reinforces the hair’s inner structure, restoring strength and resilience to chemically treated or fragile hair.",
+                "products": ["Schwarzkopf Professional", "Fibre Clinic"],
+                "features": ["Bond reinforcement", "Strengthens fragile hair", "Neutralising bonding wash"],
+                "length_pricing": {
+                  "Short": { "member": 2000, "offer": 4800, "standard": 8000 },
+                  "Medium": { "member": 2500, "offer": 6000, "standard": 10000 },
+                  "Long": { "member": 3000, "offer": 7200, "standard": 12000 }
+                }
+              },
+              {
+                "id": "olaplex-bond-repair-therapy",
+                "name": "Olaplex Bond Repair Therapy",
+                "description": "The renowned Olaplex bond-repair therapy that rebuilds broken bonds from within, restoring strength, integrity and shine to compromised hair.",
+                "products": ["Olaplex"],
+                "features": ["Resolves strength & shine", "Bonging oil finish"],
+                "length_pricing": {
+                  "Short": { "member": 2500, "offer": 6000, "standard": 10000 },
+                  "Medium": { "member": 3125, "offer": 7500, "standard": 12500 },
+                  "Long": { "member": 3750, "offer": 9000, "standard": 15000 }
+                }
+              }
+            ]
+          },
+          {
+            "id": "signature-therapies",
+            "name": "Signature Therapies",
+            "display_label": "SIGNATURE THERAPIES",
+            "descriptor": "Single-session • results-led",
+            "services": [
+              {
+                "id": "structural-repair-therapy",
+                "name": "Structural Repair Therapy",
+                "description": "A restorative peptide therapy that repairs and rebalances, replenishing damaged strands for smoother, healthier and more resilient hair.",
+                "products": ["Kanpeki", "GK Hair"],
+                "features": ["Vegetal-peptide repair", "Balancing cleanse", "Smoother, healthier hair"],
+                "pricing": { "member": 500, "offer": 1200, "standard": 2000 }
+              },
+              {
+                "id": "bluetox-botanical-smoothing-therapy",
+                "name": "Bluetox Botanical Smoothing Therapy",
+                "description": "A botanical tannin smoothing therapy that reduces volume and frizz, leaving hair sleek, nourished and beautifully controlled.",
+                "products": ["Floractive"],
+                "features": ["Botanical tannin smoothing", "Frizz & volume control", "Nano-gel cleanse"],
+                "pricing": { "member": 2000, "offer": 4800, "standard": 8000 }
+              },
+              {
+                "id": "permanent-straightening-therapy",
+                "name": "Permanent Straightening Therapy",
+                "description": "A long-lasting straightening therapy for permanently sleek, smooth and managaeble hair, tailored to your hair type after a personal consultation.",
+                "products": [],
+                "features": ["Long-lasting smoothness", "Personalised to hair type", "Expert consultation"],
+                "pricing_type": "consultation",
+                "pricing_label": "Priced on consultation"
+              },
+              {
+                "id": "signature-perm-therapy",
+                "name": "Signature Perm Therapy",
+                "description": "A crafted perm therapy that builds soft, lasting waves or curls with structure and bounce, designed to your desired texture after consultation.",
+                "products": [],
+                "features": ["Lasting curls & waves", "Custom texture design", "Expert consultation"],
+                "pricing_type": "consultation",
+                "pricing_label": "Priced on consultation"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "the-finishing-studio",
+        "name": "The Finishing Studio",
+        "display_label": "TEXTURE & STYLING",
+        "description": "Temporary transformations and protective styling for a flawless finish, whenever the occasion calls. Priced by length: Short, Medium, Long.",
+        "groups": [
+          {
+            "id": "occasion-styling",
+            "name": "Occasion Styling",
+            "display_label": "OCCASION STYLING",
+            "descriptor": "Bond-protected • heat-considered",
+            "services": [
+              {
+                "id": "sculpted-waves-styling",
+                "name": "Sculpted Waves Styling",
+                "description": "Defined, temporary curls and waves created with heat styling and bond-protecting care, for soft movement and a polished, occasion-ready finish.",
+                "products": ["GK Hair", "Olaplex"],
+                "features": ["Bond-protecting care", "Defined temporary curls", "Occasion-ready finish"],
+                "length_pricing": {
+                  "Short": { "member": 500, "offer": 1200, "standard": 2000 },
+                  "Medium": { "member": 500, "offer": 1200, "standard": 2000 },
+                  "Long": { "member": 500, "offer": 1200, "standard": 2000 }
+                }
+              },
+              {
+                "id": "sleek-straight-styling",
+                "name": "Sleek Straight Styling",
+                "description": "Smooth, temporary straightening with heat-protective care for a sleek, glossy and elegantly styled finish that lasts through the day.",
+                "products": ["Ikonic", "Wella Professionals"],
+                "features": ["Heat-protective care", "Sleek, glossy finish", "Signature cleanse"],
+                "length_pricing": {
+                  "Short": { "member": 250, "offer": 600, "standard": 1000 },
+                  "Medium": { "member": 350, "offer": 720, "standard": 1200 },
+                  "Long": { "member": 375, "offer": 900, "standard": 1500 }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "skin-hands-body",
+        "name": "Skin, Hands & Body",
+        "display_label": "BEAUTY & BODY",
+        "description": "Considered skin and body rituals — gentle formulations, expert technique and a quiet sense of calm.",
+        "groups": [
+          {
+            "id": "mediterranean-waxing",
+            "name": "Mediterranean Waxing",
+            "display_label": "MEDITERRANEAN WAXING",
+            "descriptor": "Rica • low-temperature • oil-enriched",
+            "description": "Gentle, low-temperature Italian waxing enriched with natural oils — Brazilian, Dark Chocolate, Black, Argan Oil and Golden — for smooth, cared-for skin.",
+            "products": [],
+            "features": ["Low-temperature Italian wax", "Enriched with natural oils", "Smooth, gentle finish"],
+            "services": [
+              {
+                "id": "full-arm",
+                "name": "Full Arm",
+                "description": "Gentle Mediterranean low-temperature waxing for full arm smoothness.",
+                "pricing": { "member": 250, "offer": 600, "standard": 1000 }
+              },
+              {
+                "id": "underarm",
+                "name": "Underarm",
+                "description": "Sensitive underarm Mediterranean wax enriched with natural oils.",
+                "pricing": { "member": 90, "offer": 200, "standard": 350 }
+              },
+              {
+                "id": "full-leg",
+                "name": "Full Leg",
+                "description": "Complete full leg smooth waxing treatment.",
+                "pricing": { "member": 300, "offer": 720, "standard": 1200 }
+              },
+              {
+                "id": "half-leg",
+                "name": "Half Leg",
+                "description": "Lower or upper half leg smoothing wax.",
+                "pricing": { "member": 250, "offer": 600, "standard": 1000 }
+              },
+              {
+                "id": "facial-wax",
+                "name": "Facial Wax",
+                "description": "Delicate facial contour waxing using soothing Italian oil wax.",
+                "pricing": { "member": 125, "offer": 300, "standard": 500 }
+              },
+              {
+                "id": "full-body",
+                "name": "Full Body",
+                "description": "Comprehensive full body Mediterranean waxing experience.",
+                "pricing": { "member": 1250, "offer": 3000, "standard": 5000 }
+              }
+            ]
+          },
+          {
+            "id": "aroma-hand-and-foot-rituals",
+            "name": "Aroma Hand & Foot Rituals",
+            "display_label": "AROMA HAND & FOOT RITUALS",
+            "descriptor": "Aroma Magic • Aroma Treasure",
+            "services": [
+              {
+                "id": "aroma-ritual-manicure",
+                "name": "Aroma Ritual Manicure",
+                "description": "A revitalising manicure with aromatherapy care that cleanses, exfoliates and nourishes hands and nails for a groomed, refreshed finish.",
+                "products": ["Aroma Magic"],
+                "features": ["Aromatherapy care", "Exfoliate & nourish", "Groomed finish"],
+                "pricing": { "member": 450, "offer": 1080, "standard": 1800 }
+              }
+            ]
+          },
+          {
+            "id": "skin-studio",
+            "name": "The Skin Studio",
+            "display_label": "THE SKIN STUDIO",
+            "descriptor": "Organic & professional facials",
+            "services": [
+              {
+                "id": "aroma-ritual-hand-and-foot-duo",
+                "name": "Aroma Ritual Hand & Foot Duo",
+                "description": "The complete aromatherapy ritual for hands and feet together — cleansing, exfoliating and nourishing for top-to-toe grooming and calm.",
+                "products": ["Aroma Treasure"],
+                "features": ["Complete hand & foot ritual", "Exfoliate & nourish", "Top-to-toe grooming"],
+                "pricing": { "member": 850, "offer": 2040, "standard": 3400 }
+              },
+              {
+                "id": "bearberry-botanical-facial",
+                "name": "Bearberry Botanical Facial",
+                "description": "An organic botanical facial with bearberry to gently brighten and refresh, restoring a clear, luminous and naturally healthy complexion.",
+                "products": [],
+                "features": ["Organic bearberry botanicals", "Brightening & refreshing", "Naturally luminous"],
+                "pricing": { "member": 375, "offer": 900, "standard": 1500 }
+              },
+              {
+                "id": "mixed-fruit-radiance-facial",
+                "name": "Mixed Fruit Radiance Facial",
+                "description": "A luxurious fruit-infused facial with gold, pearl and apricot care that exfoliates, hydrates and illuminates for a radiant, glowing finish.",
+                "products": [],
+                "features": ["Gold & pearl radiance", "Gentle exfoliation", "Deep hydration"],
+                "pricing": { "member": 750, "offer": 1800, "standard": 3000 }
+              },
+              {
+                "id": "korean-hydra-peptide-facial",
+                "name": "Korean Hydra-Peptide Facial",
+                "description": "Our ultra-luxury facial: an advanced Korean hydra-peptide treatment that intensely hydrates, plumps and revitalises for firm, dewy, youthful-looking skin.",
+                "products": [],
+                "features": ["Advanced peptide technology", "Intense hydration", "Ultra-luxury experience"],
+                "pricing": { "member": 1000, "offer": 2400, "standard": 4000 }
+              },
+              {
+                "id": "express-skin-clean-up",
+                "name": "Express Skin Clean-Up",
+                "description": "A refreshing express clean-up that deep-cleanses, exfoliates and revives the skin — the perfect between-facial refresh.",
+                "products": [],
+                "features": ["Deep-cleanse & exfoliate", "Quick, refreshing revival"],
+                "pricing_type": "consultation",
+                "pricing_label": "Priced on consultation"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
