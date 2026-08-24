@@ -14,16 +14,28 @@ export default function AuthModal({ isOpen, mode = 'login', onAuthSuccess, onClo
     setIsLoading(true)
     setErrorMsg('')
 
+    const path = activeTab === 'login' ? '/api/v1/auth/login' : '/api/v1/auth/register'
+    const payload = JSON.stringify({
+      username: formState.username,
+      password: formState.password
+    })
+
     try {
-      const endpoint = activeTab === 'login' ? '/api/v1/auth/login' : '/api/v1/auth/register'
-      const response = await fetch(endpoint, {
+      let response = await fetch(path, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: formState.username,
-          password: formState.password
-        })
+        body: payload
       })
+
+      // Fallback to absolute localhost:3000 if relative path is unproxied (returns HTML)
+      const contentType = response.headers.get('content-type') || ''
+      if (!response.ok && contentType.includes('text/html')) {
+        response = await fetch(`http://localhost:3000${path}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: payload
+        })
+      }
 
       const data = await response.json().catch(() => ({}))
 
@@ -31,14 +43,13 @@ export default function AuthModal({ isOpen, mode = 'login', onAuthSuccess, onClo
         onAuthSuccess(data.user)
         onClose()
       } else {
-        // Handle API 401 / 400 error messages explicitly
         const message = data.message || (activeTab === 'login'
           ? 'Invalid username or password. Please check your credentials or register.'
           : 'Username already taken or registration error.')
         setErrorMsg(message)
       }
     } catch (err) {
-      setErrorMsg('Invalid username or password. Please check your credentials or register.')
+      setErrorMsg('Unable to connect to registration server. Please try again.')
     } finally {
       setIsLoading(false)
     }
