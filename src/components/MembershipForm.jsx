@@ -22,7 +22,7 @@ export default function MembershipForm() {
           <img
             alt="Gold Membership Card"
             className="w-full h-auto object-cover rounded-xl shadow-inner transition-transform duration-500 hover:scale-[1.02]"
-            src="https://lh3.googleusercontent.com/aida/AEtjO1XpH_sVc9JUQFGuc6WOdvhgnq6hlX2uEbjB1iw0BBRuDkIEgLwEnYZ6zh6MWvKBVvERIMIsY9h3hpnrZGF-iwkdt2YJncT5z01y2Vfc2QXDmE1gr1ozol6WlD2pOsT4bYDmiQGOzLthRnk2GdD2T8Sp-mTk_DxjLyt3xtgk9AWCre5l6u8FgGL9zqYKBu84oDxXfK4uYoASp8BrjTDaQjwsdYiuosyv0MPe5ZUgymGvRi4o6kmRUMhq"
+            src="/images/gold-membership-card.svg"
           />
         </div>
         <div className="flex flex-col gap-6 bg-surface-container-lowest p-8 rounded-2xl shadow-sm border border-gold/30">

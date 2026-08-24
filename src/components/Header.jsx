@@ -1,40 +1,57 @@
 import React from 'react'
 import Logo from './Logo'
 
-export default function Header({ onOpenAuthModal, onOpenBookingModal }) {
+export default function Header({ user, onOpenAuthModal, onOpenProfileModal }) {
   return (
     <header className="w-full top-0 sticky z-50 bg-[#F9F7F2]/90 backdrop-blur-sm flat no shadows border-b border-gold/10">
       <div className="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-stack-sm max-w-container-max mx-auto">
         <a href="#" className="opacity-90 hover:opacity-100 transition-opacity">
           <Logo variant="header" />
         </a>
-        <nav class="hidden md:flex gap-6 items-center">
-          <a class="text-on-surface-variant hover:text-primary transition-colors duration-300 font-medium" href="#services">
+
+        {/* Header Navigation Links (Cleaned: Stylists removed) */}
+        <nav className="hidden md:flex gap-8 items-center">
+          <a className="text-on-surface-variant hover:text-primary transition-colors duration-300 font-medium tracking-wide" href="#services">
             Services
           </a>
-          <a class="text-on-surface-variant hover:text-primary transition-colors duration-300 font-medium" href="#membership">
+          <a className="text-on-surface-variant hover:text-primary transition-colors duration-300 font-medium tracking-wide" href="#membership">
             Membership
           </a>
-          <a class="text-on-surface-variant hover:text-primary transition-colors duration-300 font-medium" href="#philosophy">
+          <a className="text-on-surface-variant hover:text-primary transition-colors duration-300 font-medium tracking-wide" href="#philosophy">
             Philosophy
           </a>
-          <a class="text-on-surface-variant hover:text-primary transition-colors duration-300 font-medium" href="#philosophy">
-            Stylists
-          </a>
         </nav>
-        <div class="flex items-center">
-          <button
-            onClick={() => onOpenAuthModal('login')}
-            class="text-primary font-label-md uppercase tracking-wider px-4 py-3 hover:text-secondary transition-colors duration-300 mr-2"
-          >
-            Log In / Sign Up
-          </button>
-          <button
-            onClick={onOpenBookingModal}
-            class="bg-secondary text-on-secondary px-8 py-3 rounded-full font-label-md uppercase tracking-wider hover:bg-on-secondary-fixed-variant transition-all duration-300 shadow-sm hover:shadow"
-          >
-            Book Now
-          </button>
+
+        {/* Right Auth / Greeting Component */}
+        <div className="flex items-center">
+          {user ? (
+            <div
+              onClick={onOpenProfileModal}
+              title="Click to manage profile"
+              className="cursor-pointer bg-surface-container-lowest border border-gold/40 hover:border-gold px-3.5 py-1.5 rounded-full shadow-xs flex items-center gap-1.5 transition-all duration-300"
+            >
+              <span className="material-symbols-outlined text-gold text-lg shrink-0">account_circle</span>
+              {/* Dynamic Greeting Container with Fixed Width (140px max), Horizontal Scroll, No Text Ellipsis */}
+              <div
+                className="max-w-[140px] overflow-x-auto whitespace-nowrap scrollbar-none font-label-md text-primary text-xs uppercase tracking-wider font-semibold"
+                style={{
+                  textOverflow: 'clip',
+                  overflowX: 'auto',
+                  maxWidth: '140px',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                Hi {user.username}
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => onOpenAuthModal('login')}
+              className="text-primary font-label-md uppercase tracking-wider px-4 py-2 hover:text-secondary transition-colors duration-300 font-semibold border border-primary/20 rounded-full hover:border-primary/50"
+            >
+              Log In / Sign Up
+            </button>
+          )}
         </div>
       </div>
     </header>
