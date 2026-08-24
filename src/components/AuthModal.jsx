@@ -25,25 +25,28 @@ export default function AuthModal({ isOpen, mode = 'login', onAuthSuccess, onClo
         })
       })
 
-      if (response.ok) {
-        const data = await response.json()
+      const data = await response.json().catch(() => ({}))
+
+      if (response.ok && data.success !== false && data.user) {
         onAuthSuccess(data.user)
         onClose()
       } else {
-        const errData = await response.json().catch(() => ({}))
-        // Fallback for standalone frontend testing if API unavailable
-        const dummyUser = { id: 'usr_' + Date.now(), username: formState.username }
-        onAuthSuccess(dummyUser)
-        onClose()
+        // Handle API 401 / 400 error messages explicitly
+        const message = data.message || (activeTab === 'login'
+          ? 'Invalid username or password. Please check your credentials or register.'
+          : 'Username already taken or registration error.')
+        setErrorMsg(message)
       }
     } catch (err) {
-      // Local fallback for offline/frontend testing
-      const dummyUser = { id: 'usr_' + Date.now(), username: formState.username }
-      onAuthSuccess(dummyUser)
-      onClose()
+      setErrorMsg('Invalid username or password. Please check your credentials or register.')
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleTabSwitch = (newTab) => {
+    setActiveTab(newTab)
+    setErrorMsg('')
   }
 
   return (
@@ -63,14 +66,15 @@ export default function AuthModal({ isOpen, mode = 'login', onAuthSuccess, onClo
         </div>
 
         {errorMsg && (
-          <div className="mb-4 p-3 rounded-xl bg-error/10 border border-error/30 text-center text-xs text-error font-medium">
-            {errorMsg}
+          <div className="mb-4 p-3 rounded-xl bg-error/10 border border-error/30 text-center text-xs text-error font-medium flex items-center justify-center gap-1.5 animate-fadeIn">
+            <span className="material-symbols-outlined text-base shrink-0">error</span>
+            <span>{errorMsg}</span>
           </div>
         )}
 
         <div className="flex border-b border-outline-variant/30 mb-6">
           <button
-            onClick={() => setActiveTab('login')}
+            onClick={() => handleTabSwitch('login')}
             className={`flex-1 py-3 text-center font-label-md uppercase tracking-wider text-sm transition-colors border-b-2 ${
               activeTab === 'login'
                 ? 'border-gold text-primary font-bold'
@@ -80,7 +84,7 @@ export default function AuthModal({ isOpen, mode = 'login', onAuthSuccess, onClo
             Log In
           </button>
           <button
-            onClick={() => setActiveTab('signup')}
+            onClick={() => handleTabSwitch('signup')}
             className={`flex-1 py-3 text-center font-label-md uppercase tracking-wider text-sm transition-colors border-b-2 ${
               activeTab === 'signup'
                 ? 'border-gold text-primary font-bold'
