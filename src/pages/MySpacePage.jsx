@@ -356,14 +356,34 @@ export default function MySpacePage({ user, onNavigate, onUpdateUser, onOpenAuth
 
                     <div className="flex items-center gap-2">
                       {bkg.status === 'COMPLETED' && (
-                        <button
-                          onClick={() => generateInvoicePDF(bkg)}
-                          className="bg-[#042C1D] text-[#FAF6F0] hover:bg-[#084D34] px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border border-gold/40 flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
-                          title="Download Official GST Invoice Receipt"
-                        >
-                          <span className="material-symbols-outlined text-sm">download</span>
-                          <span>GST Receipt</span>
-                        </button>
+                        <>
+                          <button
+                            onClick={() => generateInvoicePDF(bkg)}
+                            className="bg-[#042C1D] text-[#FAF6F0] hover:bg-[#084D34] px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border border-gold/40 flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                            title="Download Official GST Invoice Receipt"
+                          >
+                            <span className="material-symbols-outlined text-sm">download</span>
+                            <span>GST Receipt</span>
+                          </button>
+                          <button
+                            onClick={async () => {
+                              setToast(`Tax Receipt for ${bkg.referenceId} sent to ${user?.username}@salonorganics.com!`)
+                              setTimeout(() => setToast(''), 3500)
+                              try {
+                                await fetch('/api/v1/user/invoices/email', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ bookingId: bkg.referenceId, email: `${user?.username}@salonorganics.com`, username: user?.username })
+                                })
+                              } catch {}
+                            }}
+                            className="bg-[#FAF6F0] text-[#042C1D] hover:bg-[#D4AF37]/20 px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border border-[#D4AF37]/50 flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                            title="Send Tax Receipt Invoice to Email"
+                          >
+                            <span className="material-symbols-outlined text-sm text-gold">mail</span>
+                            <span>Send to Email</span>
+                          </button>
+                        </>
                       )}
 
                       {(bkg.status === 'CONFIRMED' || bkg.status === 'RESCHEDULED') && (

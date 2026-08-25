@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import Header from '../components/Header'
+import BookingAnchorBar from '../components/BookingAnchorBar'
 import catalogueData from '../data/serviceCatalogue.json'
 import { useCart } from '../context/CartContext'
 
@@ -28,6 +29,9 @@ export default function ServicesPage({ user, onOpenBookingModal, onNavigate, onO
         onLogout={onLogout}
         onOpenEditProfile={onOpenEditProfile}
       />
+
+      {/* Sticky Time & Stylist Anchor Bar */}
+      <BookingAnchorBar onOpenSelector={() => setIsCartOpen(true)} />
 
       {/* Main Services Body */}
       <main className="flex-grow max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg w-full">

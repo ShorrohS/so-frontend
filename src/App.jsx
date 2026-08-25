@@ -12,6 +12,7 @@ import AdminLoginPage from './pages/AdminLoginPage'
 import AdminDashboardPage from './pages/AdminDashboardPage'
 import ServicesPage from './pages/ServicesPage'
 import MySpacePage from './pages/MySpacePage'
+import BookingAnchorBar from './components/BookingAnchorBar'
 import { CartProvider, useCart } from './context/CartContext'
 
 function AppContent() {
@@ -215,6 +216,8 @@ function AppContent() {
           onLogout={handleLogout}
           onOpenEditProfile={() => setExternalEditProfile(true)}
         />
+
+        <BookingAnchorBar onOpenSelector={() => setIsCartOpen(true)} />
 
         <main className="flex-grow">
           <MySpacePage

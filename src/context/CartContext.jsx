@@ -3,6 +3,37 @@ import React, { createContext, useContext, useState, useEffect } from 'react'
 const CartContext = createContext()
 
 export function CartProvider({ children }) {
+  // Session ID for temporary cart TTL
+  const [sessionId] = useState(() => {
+    try {
+      let stored = localStorage.getItem('so_cart_session_id')
+      if (!stored) {
+        stored = `sess_${Math.random().toString(36).substring(2, 12)}`
+        localStorage.setItem('so_cart_session_id', stored)
+      }
+      return stored
+    } catch {
+      return `sess_${Date.now()}`
+    }
+  })
+
+  // Selected Date/Time Slot State
+  const [selectedSlot, setSelectedSlot] = useState(() => {
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    return {
+      date: tomorrow.toISOString().split('T')[0],
+      time: '11:30 AM'
+    }
+  })
+
+  // Selected Artisan Stylist State
+  const [selectedStylist, setSelectedStylist] = useState({
+    id: 'stylist-0',
+    name: 'Any Available Artisan',
+    specialization: 'All Rituals'
+  })
+
   // Cart Items State: Array of selected service objects
   // Format: { id, title, price, audience, duration, length, pricing, length_pricing }
   const [cartItems, setCartItems] = useState(() => {
@@ -33,25 +64,42 @@ export function CartProvider({ children }) {
     }
   })
 
-  // Selected Date/Time Slot State
-  const [selectedSlot, setSelectedSlot] = useState(() => {
-    const tomorrow = new Date()
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    return {
-      date: tomorrow.toISOString().split('T')[0],
-      time: '11:30 AM'
-    }
-  })
-
   // Cart Modal Visibility State
   const [isCartOpen, setIsCartOpen] = useState(false)
 
-  // Sync cart items with localStorage
+  // Sync cart items with localStorage and backend temporary cart API
   useEffect(() => {
     try {
       localStorage.setItem('so_cart_items', JSON.stringify(cartItems))
     } catch {}
-  }, [cartItems])
+
+    if (cartItems.length > 0) {
+      syncTemporaryCartBackend()
+    }
+  }, [cartItems, selectedSlot, selectedStylist])
+
+  const syncTemporaryCartBackend = async () => {
+    try {
+      const payload = {
+        sessionId,
+        slotStart: `${selectedSlot.date} ${selectedSlot.time}`,
+        stylistId: selectedStylist.id,
+        selectedServiceIds: cartItems.map(i => i.id)
+      }
+      let res = await fetch('/api/v1/cart/temporary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      if (!res.ok) {
+        await fetch('http://localhost:3000/api/v1/cart/temporary', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        })
+      }
+    } catch {}
+  }
 
   // Calculate service price based on user status (Guest vs Member)
   const getServicePrice = (service, userTier = 'Guest') => {
@@ -106,6 +154,9 @@ export function CartProvider({ children }) {
   // Remove item from cart by ID
   const removeFromCart = (serviceId) => {
     setCartItems(prev => prev.filter(item => item.id !== serviceId))
+    try {
+      fetch(`/api/v1/cart/temporary/${sessionId}/item/${serviceId}`, { method: 'DELETE' }).catch(() => {})
+    } catch {}
   }
 
   // Clear entire cart
@@ -143,10 +194,13 @@ export function CartProvider({ children }) {
   return (
     <CartContext.Provider
       value={{
+        sessionId,
         cartItems,
         setCartItems,
         selectedSlot,
         setSelectedSlot,
+        selectedStylist,
+        setSelectedStylist,
         isCartOpen,
         setIsCartOpen,
         addToCart,
