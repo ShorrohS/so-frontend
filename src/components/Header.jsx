@@ -1,81 +1,185 @@
-import React from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import Logo from './Logo'
 
-export default function Header({ user, onOpenAuthModal, onNavigate }) {
-  const handleGoToMySpace = () => {
+export default function Header({
+  user,
+  currentRoute = '/',
+  onOpenAuthModal,
+  onNavigate,
+  onLogout,
+  onOpenEditProfile
+}) {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const dropdownRef = useRef(null)
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const handleNav = (path) => {
     if (onNavigate) {
-      onNavigate('/my-space')
+      onNavigate(path)
     } else {
-      window.location.hash = '#/my-space'
+      window.location.hash = `#${path}`
     }
   }
 
+  const isMySpaceActive = user && (currentRoute === '/' || currentRoute === '/my-space')
+  const isServicesActive = currentRoute === '/services'
+
   return (
-    <header className="w-full top-0 sticky z-50 bg-[#F9F7F2]/90 backdrop-blur-sm flat no shadows border-b border-gold/10">
-      <div className="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-stack-sm max-w-container-max mx-auto">
-        <a href="#" onClick={() => onNavigate ? onNavigate('/') : (window.location.hash = '#/')} className="opacity-90 hover:opacity-100 transition-opacity">
+    <header className="w-full top-0 sticky z-50 bg-[#F9F7F2]/95 backdrop-blur-md border-b border-gold/20 shadow-xs">
+      <div className="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-3.5 max-w-container-max mx-auto">
+        
+        {/* Brand Logo */}
+        <button
+          onClick={() => handleNav(user ? '/my-space' : '/')}
+          className="opacity-90 hover:opacity-100 transition-opacity border-none bg-transparent p-0 cursor-pointer text-left"
+          title="Salon Orgænics Sanctuary"
+        >
           <Logo variant="header" />
-        </a>
+        </button>
 
-        {/* Header Navigation Links */}
+        {/* Navigation Tabs */}
         <nav className="hidden md:flex gap-8 items-center">
-          <button
-            onClick={() => onNavigate ? onNavigate('/services') : (window.location.hash = '#/services')}
-            className="text-on-surface-variant hover:text-primary transition-colors duration-300 font-medium tracking-wide cursor-pointer bg-transparent border-none p-0 text-base"
-          >
-            Services
-          </button>
+          {user ? (
+            <>
+              {/* Logged-In Main Navigation Tabs */}
+              <button
+                onClick={() => handleNav('/my-space')}
+                className={`font-label-md uppercase tracking-wider text-xs font-bold transition-all cursor-pointer py-1.5 border-b-2 ${
+                  isMySpaceActive
+                    ? 'border-[#D4AF37] text-[#042C1D]'
+                    : 'border-transparent text-on-surface-variant hover:text-[#042C1D]'
+                }`}
+              >
+                My Space
+              </button>
 
-          <a className="text-on-surface-variant hover:text-primary transition-colors duration-300 font-medium tracking-wide" href="#membership">
-            Membership
-          </a>
+              <button
+                onClick={() => handleNav('/services')}
+                className={`font-label-md uppercase tracking-wider text-xs font-bold transition-all cursor-pointer py-1.5 border-b-2 ${
+                  isServicesActive
+                    ? 'border-[#D4AF37] text-[#042C1D]'
+                    : 'border-transparent text-on-surface-variant hover:text-[#042C1D]'
+                }`}
+              >
+                Services
+              </button>
 
-          <a className="text-on-surface-variant hover:text-primary transition-colors duration-300 font-medium tracking-wide" href="#philosophy">
-            Philosophy
-          </a>
+              <a
+                href="#membership"
+                className="font-label-md uppercase tracking-wider text-xs font-bold text-on-surface-variant hover:text-[#042C1D] transition-colors py-1.5 border-b-2 border-transparent"
+              >
+                Membership
+              </a>
+            </>
+          ) : (
+            <>
+              {/* Logged-Out Navigation Links */}
+              <button
+                onClick={() => handleNav('/services')}
+                className="text-on-surface-variant hover:text-primary transition-colors font-medium tracking-wide cursor-pointer bg-transparent border-none p-0 text-sm"
+              >
+                Services
+              </button>
 
-          {/* Promoted Top Header Navigation Link for Authenticated Users */}
-          {user && (
-            <button
-              onClick={handleGoToMySpace}
-              className="text-[#042C1D] font-bold tracking-wide hover:text-[#D4AF37] transition-colors duration-300 cursor-pointer bg-[#D4AF37]/15 border border-[#D4AF37]/40 px-3.5 py-1 rounded-full text-xs font-label-md uppercase tracking-wider flex items-center gap-1.5 shadow-xs"
-            >
-              <span className="material-symbols-outlined text-xs text-[#D4AF37]">spa</span>
-              <span>My Space</span>
-            </button>
+              <a className="text-on-surface-variant hover:text-primary transition-colors font-medium tracking-wide text-sm" href="#membership">
+                Membership
+              </a>
+
+              <a className="text-on-surface-variant hover:text-primary transition-colors font-medium tracking-wide text-sm" href="#philosophy">
+                Philosophy
+              </a>
+            </>
           )}
         </nav>
 
-        {/* Right Auth / Greeting Component */}
-        <div className="flex items-center">
+        {/* Right User Badge / Auth CTA */}
+        <div className="flex items-center relative" ref={dropdownRef}>
           {user ? (
-            <div
-              onClick={handleGoToMySpace}
-              title="Click to open My Space profile"
-              className="cursor-pointer bg-surface-container-lowest border border-gold/40 hover:border-gold px-3.5 py-1.5 rounded-full shadow-xs flex items-center gap-1.5 transition-all duration-300"
-            >
-              <span className="material-symbols-outlined text-gold text-lg shrink-0">account_circle</span>
-              <div
-                className="max-w-[140px] overflow-x-auto whitespace-nowrap scrollbar-none font-label-md text-primary text-xs uppercase tracking-wider font-semibold"
-                style={{
-                  textOverflow: 'clip',
-                  overflowX: 'auto',
-                  maxWidth: '140px',
-                  whiteSpace: 'nowrap'
-                }}
+            <div className="relative">
+              {/* Logged-In User Badge */}
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="bg-[#042C1D] text-[#FAF6F0] hover:bg-[#084D34] border border-[#D4AF37]/50 px-3.5 py-1.5 rounded-full shadow-xs flex items-center gap-2 transition-all duration-300 cursor-pointer"
+                title="Account Menu"
               >
-                Hi {user.username}
-              </div>
+                <span className="material-symbols-outlined text-gold text-lg shrink-0">account_circle</span>
+                <span className="font-label-md text-xs uppercase tracking-wider font-bold max-w-[120px] truncate text-white">
+                  Hi {user.username}
+                </span>
+                <span className="material-symbols-outlined text-gold text-sm transition-transform duration-200" style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                  expand_more
+                </span>
+              </button>
+
+              {/* User Profile Dropdown Menu */}
+              {isDropdownOpen && (
+                <div className="absolute right-0 top-full mt-2 w-56 bg-[#FAF6F0] rounded-2xl border border-gold/40 shadow-2xl p-2 z-50 animate-fadeIn">
+                  <div className="px-3 py-2 border-b border-gold/20 mb-1">
+                    <span className="text-[10px] text-gold uppercase font-bold tracking-widest block">Logged In As</span>
+                    <span className="text-xs font-bold text-[#042C1D] font-mono truncate block">{user.username}</span>
+                    <span className="bg-[#D4AF37]/20 text-[#042C1D] text-[9px] font-bold px-2 py-0.5 rounded-full mt-1 inline-block uppercase">
+                      {user.tier || 'Gold Member'}
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setIsDropdownOpen(false)
+                      if (onOpenEditProfile) onOpenEditProfile()
+                      else handleNav('/my-space')
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-[#042C1D] hover:bg-gold/15 transition-colors flex items-center gap-2 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-base text-gold">edit</span>
+                    <span>Edit Account Profile</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setIsDropdownOpen(false)
+                      alert('Sanctuary Preferences set to Default View.')
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-[#042C1D] hover:bg-gold/15 transition-colors flex items-center gap-2 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-base text-gold">settings</span>
+                    <span>Preferences</span>
+                  </button>
+
+                  <div className="h-px bg-gold/20 my-1"></div>
+
+                  <button
+                    onClick={() => {
+                      setIsDropdownOpen(false)
+                      if (onLogout) onLogout()
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-error hover:bg-error/10 transition-colors flex items-center gap-2 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-base text-error">logout</span>
+                    <span>Log Out</span>
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <button
-              onClick={() => onOpenAuthModal('login')}
-              className="text-primary font-label-md uppercase tracking-wider px-4 py-2 hover:text-secondary transition-colors duration-300 font-semibold border border-primary/20 rounded-full hover:border-primary/50 cursor-pointer"
+              onClick={() => onOpenAuthModal && onOpenAuthModal('login')}
+              className="bg-secondary text-on-secondary font-label-md uppercase tracking-wider px-4 py-2 hover:bg-on-secondary-fixed-variant transition-colors duration-300 text-xs font-bold rounded-full border border-gold/30 cursor-pointer shadow-xs"
             >
               Log In / Sign Up
             </button>
           )}
         </div>
+
       </div>
     </header>
   )

@@ -65,6 +65,7 @@ export default function App() {
   const [authModal, setAuthModal] = useState({ isOpen: false, mode: 'login' })
   const [isBookingOpen, setIsBookingOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [externalEditProfile, setExternalEditProfile] = useState(false)
 
   // Dynamic CMS Settings State
   const [cmsSettings, setCmsSettings] = useState({
@@ -79,6 +80,7 @@ export default function App() {
     try {
       localStorage.setItem('so_user', JSON.stringify(userData))
     } catch {}
+    navigate('/my-space')
   }
 
   const handleAdminLogin = (adminData) => {
@@ -98,6 +100,7 @@ export default function App() {
     setUser(null)
     localStorage.removeItem('so_user')
     setIsProfileOpen(false)
+    setExternalEditProfile(false)
     navigate('/')
   }
 
@@ -144,43 +147,7 @@ export default function App() {
 
   // --- ROUTE SWITCHER ---
 
-  // 1. Full Detailed Services Sanctuary Menu Page (/services)
-  if (currentRoute === '/services') {
-    return (
-      <>
-        <ServicesPage
-          onOpenBookingModal={() => setIsBookingOpen(true)}
-          onNavigate={navigate}
-        />
-        <BookingModal
-          isOpen={isBookingOpen}
-          onClose={() => setIsBookingOpen(false)}
-        />
-      </>
-    )
-  }
-
-  // 2. Standalone Customer "My Space" Page (/my-space)
-  if (currentRoute === '/my-space') {
-    return (
-      <>
-        <MySpacePage
-          user={user}
-          onNavigate={navigate}
-          onUpdateUser={handleAuthSuccess}
-          onOpenAuthModal={(mode) => setAuthModal({ isOpen: true, mode })}
-        />
-        <AuthModal
-          isOpen={authModal.isOpen}
-          mode={authModal.mode}
-          onAuthSuccess={handleAuthSuccess}
-          onClose={() => setAuthModal({ isOpen: false, mode: 'login' })}
-        />
-      </>
-    )
-  }
-
-  // 3. Standalone Admin Login View (/admin/login)
+  // 1. Standalone Admin Login View (/admin/login)
   if (currentRoute === '/admin/login') {
     return (
       <AdminLoginPage
@@ -190,7 +157,7 @@ export default function App() {
     )
   }
 
-  // 4. Standalone Admin Dashboard View (/admin/dashboard with Route Guard)
+  // 2. Standalone Admin Dashboard View (/admin/dashboard with Route Guard)
   if (currentRoute === '/admin/dashboard') {
     return (
       <AdminDashboardPage
@@ -204,7 +171,72 @@ export default function App() {
     )
   }
 
-  // 5. Public Landing Page View (/)
+  // 3. Services Menu Route (/services)
+  if (currentRoute === '/services') {
+    return (
+      <>
+        <ServicesPage
+          user={user}
+          onOpenBookingModal={() => setIsBookingOpen(true)}
+          onNavigate={navigate}
+          onOpenAuthModal={(mode) => setAuthModal({ isOpen: true, mode })}
+          onLogout={handleLogout}
+          onOpenEditProfile={() => {
+            navigate('/my-space')
+            setExternalEditProfile(true)
+          }}
+        />
+        <BookingModal
+          isOpen={isBookingOpen}
+          user={user}
+          onClose={() => setIsBookingOpen(false)}
+        />
+        <AuthModal
+          isOpen={authModal.isOpen}
+          mode={authModal.mode}
+          onAuthSuccess={handleAuthSuccess}
+          onClose={() => setAuthModal({ isOpen: false, mode: 'login' })}
+        />
+      </>
+    )
+  }
+
+  // 4. Authenticated User Landing Page (/ or /my-space when user is logged in)
+  if (user && (currentRoute === '/' || currentRoute === '/my-space')) {
+    return (
+      <div className="min-h-screen flex flex-col font-body-md text-body-md bg-[#F9F7F2]">
+        <Header
+          user={user}
+          currentRoute={currentRoute}
+          onOpenAuthModal={(mode) => setAuthModal({ isOpen: true, mode })}
+          onNavigate={navigate}
+          onLogout={handleLogout}
+          onOpenEditProfile={() => setExternalEditProfile(true)}
+        />
+
+        <main className="flex-grow">
+          <MySpacePage
+            user={user}
+            onNavigate={navigate}
+            onUpdateUser={handleAuthSuccess}
+            onOpenAuthModal={(mode) => setAuthModal({ isOpen: true, mode })}
+            externalEditProfile={externalEditProfile}
+            onCloseExternalEditProfile={() => setExternalEditProfile(false)}
+          />
+        </main>
+
+        <Footer onNavigate={navigate} />
+
+        <BookingModal
+          isOpen={isBookingOpen}
+          user={user}
+          onClose={() => setIsBookingOpen(false)}
+        />
+      </div>
+    )
+  }
+
+  // 5. Logged-Out Public Landing Page View (/)
   return (
     <div className="min-h-screen flex flex-col font-body-md text-body-md bg-[#F9F7F2]">
       {admin && (
@@ -232,9 +264,11 @@ export default function App() {
 
       <Header
         user={user}
+        currentRoute={currentRoute}
         onOpenAuthModal={(mode) => setAuthModal({ isOpen: true, mode })}
-        onOpenProfileModal={() => navigate('/my-space')}
         onNavigate={navigate}
+        onLogout={handleLogout}
+        onOpenEditProfile={() => setExternalEditProfile(true)}
       />
 
       <main className="flex-grow">

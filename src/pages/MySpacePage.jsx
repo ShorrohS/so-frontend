@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { generateInvoicePDF } from '../utils/invoiceGenerator'
 
-export default function MySpacePage({ user, onNavigate, onUpdateUser, onOpenAuthModal }) {
+export default function MySpacePage({ user, onNavigate, onUpdateUser, onOpenAuthModal, externalEditProfile, onCloseExternalEditProfile }) {
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState('')
@@ -19,10 +19,16 @@ export default function MySpacePage({ user, onNavigate, onUpdateUser, onOpenAuth
     password: ''
   })
 
+  useEffect(() => {
+    if (externalEditProfile) {
+      setIsEditingProfile(true)
+    }
+  }, [externalEditProfile])
+
   // Route Guard Protection
   useEffect(() => {
     if (!user) {
-      onNavigate('/')
+      if (onNavigate) onNavigate('/')
       if (onOpenAuthModal) onOpenAuthModal('login')
     }
   }, [user, onNavigate, onOpenAuthModal])
@@ -204,18 +210,10 @@ export default function MySpacePage({ user, onNavigate, onUpdateUser, onOpenAuth
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsEditingProfile(true)}
-              className="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer"
+              className="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
               <span className="material-symbols-outlined text-sm">edit</span>
               <span>Edit Account Profile</span>
-            </button>
-
-            <button
-              onClick={() => onNavigate('/')}
-              className="bg-[#FAF6F0] text-[#042C1D] hover:bg-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-sm">home</span>
-              <span>Back to Sanctuary</span>
             </button>
           </div>
         </div>

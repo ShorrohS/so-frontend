@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
-import Logo from '../components/Logo'
+import Header from '../components/Header'
 import catalogueData from '../data/serviceCatalogue.json'
 
-export default function ServicesPage({ onOpenBookingModal, onNavigate }) {
+export default function ServicesPage({ user, onOpenBookingModal, onNavigate, onOpenAuthModal, onLogout, onOpenEditProfile }) {
   const { catalogue } = catalogueData
   const { categories, currency_symbol: symbol, catalogue_footer: footer } = catalogue
 
@@ -17,29 +17,15 @@ export default function ServicesPage({ onOpenBookingModal, onNavigate }) {
 
   return (
     <div className="min-h-screen bg-[#F9F7F2] flex flex-col font-body-md text-body-md">
-      {/* Top Header Navigation */}
-      <header className="w-full sticky top-0 z-50 bg-[#F9F7F2]/95 backdrop-blur-md border-b border-gold/20">
-        <div className="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4 max-w-container-max mx-auto">
-          <button
-            onClick={() => onNavigate('/')}
-            className="flex items-center gap-2 text-primary hover:text-gold transition-colors font-label-md uppercase tracking-wider text-xs font-bold cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-lg">arrow_back</span>
-            <span>Return to Sanctuary</span>
-          </button>
-
-          <a href="#" onClick={() => onNavigate('/')}>
-            <Logo variant="header" />
-          </a>
-
-          <button
-            onClick={onOpenBookingModal}
-            className="bg-secondary text-on-secondary px-4 py-2 rounded-full font-label-md uppercase tracking-wider text-xs font-semibold hover:bg-on-secondary-fixed-variant transition-colors border border-gold/30 cursor-pointer shadow-xs"
-          >
-            Book Ritual
-          </button>
-        </div>
-      </header>
+      {/* Dynamic Global Header */}
+      <Header
+        user={user}
+        currentRoute="/services"
+        onNavigate={onNavigate}
+        onOpenAuthModal={onOpenAuthModal}
+        onLogout={onLogout}
+        onOpenEditProfile={onOpenEditProfile}
+      />
 
       {/* Main Services Body */}
       <main className="flex-grow max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg w-full">
