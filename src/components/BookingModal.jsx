@@ -1,18 +1,25 @@
 import React, { useState, useEffect } from 'react'
+import { useCart } from '../context/CartContext'
 
 export default function BookingModal({ isOpen, user, onClose, onBookingSuccess }) {
-  const [step, setStep] = useState(1) // 1: Cart & Services | 2: Date & Time | 3: Stylist | 4: Confirmation Summary | 5: Success Badge
-  const [cartServices, setCartServices] = useState([
-    { id: 'classic-precision-cut', name: 'Classic Precision Cut', category: 'For Him', price: 75 },
-    { id: 'black-edition-beard-ritual', name: 'Black Edition Beard Ritual', category: 'For Him', price: 100 }
-  ])
+  const {
+    cartItems,
+    removeFromCart,
+    clearCart,
+    selectedSlot,
+    setSelectedSlot,
+    calculateCartTotal
+  } = useCart()
 
-  const [date, setDate] = useState(() => {
-    const tomorrow = new Date()
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    return tomorrow.toISOString().split('T')[0]
-  })
-  const [time, setTime] = useState('11:30 AM')
+  const [step, setStep] = useState(1) // 1: Cart & Services | 2: Date & Time | 3: Stylist | 4: Confirmation Summary | 5: Success Badge
+
+  const [date, setDate] = useState(selectedSlot.date)
+  const [time, setTime] = useState(selectedSlot.time)
+
+  useEffect(() => {
+    setSelectedSlot({ date, time })
+  }, [date, time, setSelectedSlot])
+
   const [selectedStylist, setSelectedStylist] = useState({
     id: 'stylist-1',
     name: 'Master Artisan Rahul',
@@ -53,22 +60,16 @@ export default function BookingModal({ isOpen, user, onClose, onBookingSuccess }
 
   if (!isOpen) return null
 
-  const calculateTotal = () => {
-    return cartServices.reduce((sum, item) => sum + (typeof item.price === 'number' ? item.price : 0), 0)
-  }
+  const userTier = user?.tier || 'Guest'
+  const totalAmount = calculateCartTotal(userTier)
 
   const handleRemoveService = (serviceId) => {
-    if (cartServices.length <= 1) {
-      setErrorMessage('Booking requires at least one service ritual.')
-      setTimeout(() => setErrorMessage(''), 3000)
-      return
-    }
-    setCartServices(cartServices.filter(s => s.id !== serviceId))
+    removeFromCart(serviceId)
   }
 
   // Handle Date or Time Slot Change with Single-Slot Cart Policy Constraint Warning
   const handleTimeSlotSelect = (newSlot) => {
-    if (time !== newSlot && cartServices.length > 0) {
+    if (time !== newSlot && cartItems.length > 0) {
       setPendingSlotChange({ type: 'time', value: newSlot })
       setShowSlotChangeWarning(true)
     } else {
@@ -77,7 +78,7 @@ export default function BookingModal({ isOpen, user, onClose, onBookingSuccess }
   }
 
   const handleDateSelect = (newDate) => {
-    if (date !== newDate && cartServices.length > 0) {
+    if (date !== newDate && cartItems.length > 0) {
       setPendingSlotChange({ type: 'date', value: newDate })
       setShowSlotChangeWarning(true)
     } else {
@@ -95,16 +96,22 @@ export default function BookingModal({ isOpen, user, onClose, onBookingSuccess }
   }
 
   const handleConfirmReservation = async () => {
+    if (cartItems.length === 0) return
     setIsSubmitting(true)
     setErrorMessage('')
     try {
       const payload = {
-        services: cartServices,
+        services: cartItems.map(item => ({
+          id: item.id,
+          name: item.title || item.name,
+          category: item.audience || item.category,
+          price: item.price
+        })),
         stylistId: selectedStylist.id,
         stylistName: selectedStylist.name,
         bookingDate: date,
         bookingTime: time,
-        totalAmount: calculateTotal(),
+        totalAmount: totalAmount,
         username: user?.username || 'Guest Client',
         userId: user?.id || 'usr_guest'
       }
@@ -125,16 +132,16 @@ export default function BookingModal({ isOpen, user, onClose, onBookingSuccess }
 
       const data = await res.json()
       if (res.status === 409 || !data.success) {
-        // Handle HTTP 409 Stylist or Seat Capacity Conflict
         setErrorMessage(data.message || 'Selected stylist or time slot is unavailable due to high concurrency.')
         if (data.code === 'STYLIST_UNAVAILABLE') {
-          setStep(3) // Return to stylist selection
+          setStep(3)
         } else if (data.code === 'SALON_CAPACITY_FULL') {
-          setStep(2) // Return to date/time selection
+          setStep(2)
         }
       } else if (data.success) {
         setConfirmedBooking(data.booking)
-        setStep(5) // Success step
+        setStep(5)
+        clearCart()
         if (onBookingSuccess) onBookingSuccess(data.booking)
       }
     } catch (err) {
@@ -157,7 +164,7 @@ export default function BookingModal({ isOpen, user, onClose, onBookingSuccess }
       <div className="bg-[#F9F7F2] rounded-3xl max-w-lg w-full border border-gold/40 shadow-2xl overflow-hidden p-6 md:p-8 relative flex flex-col max-h-[90vh]">
         <button
           onClick={reset}
-          className="absolute top-4 right-4 text-outline hover:text-on-background transition-colors p-1"
+          className="absolute top-4 right-4 text-outline hover:text-on-background transition-colors p-1 cursor-pointer"
         >
           <span className="material-symbols-outlined text-2xl">close</span>
         </button>
@@ -193,35 +200,67 @@ export default function BookingModal({ isOpen, user, onClose, onBookingSuccess }
                 <span className="text-xs font-mono font-bold text-gold">{date} at {time}</span>
               </div>
 
-              <div className="divide-y border border-gold/30 rounded-2xl bg-white overflow-hidden shadow-xs">
-                {cartServices.map(srv => (
-                  <div key={srv.id} className="p-3.5 flex justify-between items-center text-xs">
-                    <div>
-                      <span className="font-bold text-[#042C1D] block">{srv.name}</span>
-                      <span className="text-[10px] text-on-surface-variant">{srv.category}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="font-bold text-gold">₹{srv.price}</span>
-                      <button
-                        onClick={() => handleRemoveService(srv.id)}
-                        className="text-error hover:opacity-80 p-1 cursor-pointer"
-                        title="Remove service"
-                      >
-                        <span className="material-symbols-outlined text-base">delete</span>
-                      </button>
-                    </div>
+              {cartItems.length === 0 ? (
+                /* Empty State */
+                <div className="py-12 px-4 text-center bg-white border border-gold/30 rounded-2xl flex flex-col items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-[#FAF6F0] border border-gold/30 flex items-center justify-center text-gold">
+                    <span className="material-symbols-outlined text-2xl">shopping_bag</span>
                   </div>
-                ))}
-              </div>
+                  <p className="text-xs text-on-surface-variant font-medium">
+                    No rituals selected. Choose a service to begin.
+                  </p>
+                </div>
+              ) : (
+                /* Dynamic Cart Items List */
+                <div className="divide-y border border-gold/30 rounded-2xl bg-white overflow-hidden shadow-xs">
+                  {cartItems.map(srv => (
+                    <div key={srv.id} className="p-3.5 flex justify-between items-center text-xs hover:bg-[#FAF6F0]/50 transition-colors">
+                      <div>
+                        <span className="font-bold text-[#042C1D] block">{srv.title || srv.name}</span>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-[10px] text-on-surface-variant font-medium bg-[#FAF6F0] px-2 py-0.5 rounded border border-gold/20">
+                            {srv.audience || srv.category || 'For All'}
+                          </span>
+                          {srv.length && (
+                            <span className="text-[10px] text-gold font-bold font-mono">
+                              Length: {srv.length}
+                            </span>
+                          )}
+                        </div>
+                      </div>
 
+                      <div className="flex items-center gap-3">
+                        <span className="font-mono font-extrabold text-gold text-sm">₹{srv.price}</span>
+                        <button
+                          onClick={() => handleRemoveService(srv.id)}
+                          className="text-error hover:bg-error/10 p-1.5 rounded-lg transition-colors cursor-pointer"
+                          title="Remove service ritual"
+                        >
+                          <span className="material-symbols-outlined text-base">delete</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Total Estimated Price Display */}
               <div className="bg-[#FAF6F0] p-4 rounded-2xl border border-gold/30 flex justify-between items-center text-sm font-bold text-[#042C1D]">
-                <span>Total Estimated Price ({user?.tier || 'Member Rate'})</span>
-                <span className="text-gold text-base">₹{calculateTotal()}</span>
+                <div>
+                  <span>Total Estimated Price</span>
+                  <span className="text-[10px] text-gold block font-mono">({userTier} Rate)</span>
+                </div>
+                <span className="text-gold font-extrabold text-lg">₹{totalAmount}</span>
               </div>
 
               <button
+                disabled={cartItems.length === 0}
                 onClick={() => setStep(2)}
-                className="w-full bg-[#042C1D] text-[#FAF6F0] py-3.5 rounded-full font-label-md uppercase tracking-wider text-xs hover:bg-[#084D34] transition-all border border-[#D4AF37]/40 shadow-xs font-bold flex items-center justify-center gap-2 cursor-pointer mt-2"
+                className={`w-full py-3.5 rounded-full font-label-md uppercase tracking-wider text-xs transition-all border border-[#D4AF37]/40 shadow-xs font-bold flex items-center justify-center gap-2 mt-2 ${
+                  cartItems.length === 0
+                    ? 'bg-outline-variant/30 text-on-surface-variant cursor-not-allowed border-transparent'
+                    : 'bg-[#042C1D] text-[#FAF6F0] hover:bg-[#084D34] cursor-pointer'
+                }`}
               >
                 <span>Continue to Date & Time</span>
                 <span className="material-symbols-outlined text-sm">arrow_forward</span>
@@ -267,7 +306,7 @@ export default function BookingModal({ isOpen, user, onClose, onBookingSuccess }
               <div className="flex gap-3 mt-4">
                 <button
                   onClick={() => setStep(1)}
-                  className="px-5 py-3 rounded-full border border-outline-variant/30 text-[#042C1D] font-bold text-xs hover:bg-black/5"
+                  className="px-5 py-3 rounded-full border border-outline-variant/30 text-[#042C1D] font-bold text-xs hover:bg-black/5 cursor-pointer"
                 >
                   Back
                 </button>
@@ -314,7 +353,7 @@ export default function BookingModal({ isOpen, user, onClose, onBookingSuccess }
               <div className="flex gap-3 mt-4">
                 <button
                   onClick={() => setStep(2)}
-                  className="px-5 py-3 rounded-full border border-outline-variant/30 text-[#042C1D] font-bold text-xs hover:bg-black/5"
+                  className="px-5 py-3 rounded-full border border-outline-variant/30 text-[#042C1D] font-bold text-xs hover:bg-black/5 cursor-pointer"
                 >
                   Back
                 </button>
@@ -335,7 +374,7 @@ export default function BookingModal({ isOpen, user, onClose, onBookingSuccess }
               <div className="bg-white p-4 rounded-2xl border border-gold/30 flex flex-col gap-3 text-xs">
                 <div className="flex justify-between border-b border-outline-variant/15 pb-2">
                   <span className="text-on-surface-variant font-medium">Guest Client:</span>
-                  <span className="font-bold text-[#042C1D]">{user?.username || 'Guest Client'} ({user?.tier || 'Member'})</span>
+                  <span className="font-bold text-[#042C1D]">{user?.username || 'Guest Client'} ({userTier})</span>
                 </div>
                 <div className="flex justify-between border-b border-outline-variant/15 pb-2">
                   <span className="text-on-surface-variant font-medium">Appointment Date & Time:</span>
@@ -347,29 +386,29 @@ export default function BookingModal({ isOpen, user, onClose, onBookingSuccess }
                 </div>
                 <div>
                   <span className="text-on-surface-variant font-medium block mb-1">Selected Rituals:</span>
-                  {cartServices.map(s => (
+                  {cartItems.map(s => (
                     <div key={s.id} className="flex justify-between text-[11px] font-semibold text-[#042C1D]">
-                      <span>• {s.name}</span>
+                      <span>• {s.title || s.name}</span>
                       <span>₹{s.price}</span>
                     </div>
                   ))}
                 </div>
                 <div className="pt-2 border-t border-gold/30 flex justify-between text-sm font-bold text-[#042C1D]">
                   <span>Total Amount Due:</span>
-                  <span className="text-gold font-extrabold text-base">₹{calculateTotal()}</span>
+                  <span className="text-gold font-extrabold text-base">₹{totalAmount}</span>
                 </div>
               </div>
 
               <div className="flex gap-3 mt-2">
                 <button
                   onClick={() => setStep(3)}
-                  className="px-5 py-3 rounded-full border border-outline-variant/30 text-[#042C1D] font-bold text-xs hover:bg-black/5"
+                  className="px-5 py-3 rounded-full border border-outline-variant/30 text-[#042C1D] font-bold text-xs hover:bg-black/5 cursor-pointer"
                 >
                   Back
                 </button>
                 <button
                   onClick={handleConfirmReservation}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || cartItems.length === 0}
                   className="flex-grow bg-secondary text-on-secondary py-3.5 rounded-full font-label-md uppercase tracking-wider text-xs hover:bg-on-secondary-fixed-variant transition-colors border border-gold/30 shadow-xs font-bold flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {isSubmitting ? 'Verifying Availability...' : 'Confirm Reservation'}
@@ -419,13 +458,13 @@ export default function BookingModal({ isOpen, user, onClose, onBookingSuccess }
                   setShowSlotChangeWarning(false)
                   setPendingSlotChange(null)
                 }}
-                className="px-4 py-2 rounded-full border border-[#042C1D]/30 text-[#042C1D] font-bold text-xs"
+                className="px-4 py-2 rounded-full border border-[#042C1D]/30 text-[#042C1D] font-bold text-xs cursor-pointer"
               >
                 Keep Current Slot
               </button>
               <button
                 onClick={confirmSlotChangeAndClearCart}
-                className="bg-[#042C1D] text-[#FAF6F0] px-4 py-2 rounded-full font-bold text-xs border border-gold/40"
+                className="bg-[#042C1D] text-[#FAF6F0] px-4 py-2 rounded-full font-bold text-xs border border-gold/40 cursor-pointer"
               >
                 Confirm New Slot
               </button>

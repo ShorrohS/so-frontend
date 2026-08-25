@@ -12,8 +12,11 @@ import AdminLoginPage from './pages/AdminLoginPage'
 import AdminDashboardPage from './pages/AdminDashboardPage'
 import ServicesPage from './pages/ServicesPage'
 import MySpacePage from './pages/MySpacePage'
+import { CartProvider, useCart } from './context/CartContext'
 
-export default function App() {
+function AppContent() {
+  const { isCartOpen, setIsCartOpen } = useCart()
+
   // Hash & Pathname Route State (Supports /, /services, /my-space, /admin/login, /admin/dashboard)
   const [currentRoute, setCurrentRoute] = useState(() => {
     const hash = window.location.hash.replace('#', '')
@@ -63,7 +66,6 @@ export default function App() {
   })
 
   const [authModal, setAuthModal] = useState({ isOpen: false, mode: 'login' })
-  const [isBookingOpen, setIsBookingOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [externalEditProfile, setExternalEditProfile] = useState(false)
 
@@ -177,7 +179,7 @@ export default function App() {
       <>
         <ServicesPage
           user={user}
-          onOpenBookingModal={() => setIsBookingOpen(true)}
+          onOpenBookingModal={() => setIsCartOpen(true)}
           onNavigate={navigate}
           onOpenAuthModal={(mode) => setAuthModal({ isOpen: true, mode })}
           onLogout={handleLogout}
@@ -187,9 +189,9 @@ export default function App() {
           }}
         />
         <BookingModal
-          isOpen={isBookingOpen}
+          isOpen={isCartOpen}
           user={user}
-          onClose={() => setIsBookingOpen(false)}
+          onClose={() => setIsCartOpen(false)}
         />
         <AuthModal
           isOpen={authModal.isOpen}
@@ -228,9 +230,9 @@ export default function App() {
         <Footer onNavigate={navigate} />
 
         <BookingModal
-          isOpen={isBookingOpen}
+          isOpen={isCartOpen}
           user={user}
-          onClose={() => setIsBookingOpen(false)}
+          onClose={() => setIsCartOpen(false)}
         />
       </div>
     )
@@ -272,9 +274,9 @@ export default function App() {
       />
 
       <main className="flex-grow">
-        <Hero cmsSettings={cmsSettings} onOpenBookingModal={() => setIsBookingOpen(true)} />
+        <Hero cmsSettings={cmsSettings} onOpenBookingModal={() => setIsCartOpen(true)} />
         <MembershipForm />
-        <ServicesAccordion onOpenBookingModal={() => setIsBookingOpen(true)} onNavigate={navigate} />
+        <ServicesAccordion onOpenBookingModal={() => setIsCartOpen(true)} onNavigate={navigate} />
         <Philosophy />
       </main>
 
@@ -288,9 +290,9 @@ export default function App() {
       />
 
       <BookingModal
-        isOpen={isBookingOpen}
+        isOpen={isCartOpen}
         user={user}
-        onClose={() => setIsBookingOpen(false)}
+        onClose={() => setIsCartOpen(false)}
       />
 
       <UserProfileModal
@@ -301,5 +303,13 @@ export default function App() {
         onClose={() => setIsProfileOpen(false)}
       />
     </div>
+  )
+}
+
+export default function App() {
+  return (
+    <CartProvider>
+      <AppContent />
+    </CartProvider>
   )
 }

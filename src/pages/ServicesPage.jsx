@@ -1,8 +1,10 @@
 import React, { useState } from 'react'
 import Header from '../components/Header'
 import catalogueData from '../data/serviceCatalogue.json'
+import { useCart } from '../context/CartContext'
 
 export default function ServicesPage({ user, onOpenBookingModal, onNavigate, onOpenAuthModal, onLogout, onOpenEditProfile }) {
+  const { addToCart, isInCart, setIsCartOpen } = useCart()
   const { catalogue } = catalogueData
   const { categories, currency_symbol: symbol, catalogue_footer: footer } = catalogue
 
@@ -111,6 +113,8 @@ export default function ServicesPage({ user, onOpenBookingModal, onNavigate, onO
                     standardPrice = lengthPricingObj?.standard
                   }
 
+                  const isAdded = isInCart(service.id)
+
                   return (
                     <div
                       key={service.id}
@@ -209,11 +213,23 @@ export default function ServicesPage({ user, onOpenBookingModal, onNavigate, onO
                         )}
 
                         <button
-                          onClick={onOpenBookingModal}
-                          className="w-full bg-[#042C1D] text-[#FAF6F0] py-3 rounded-full font-label-md uppercase tracking-wider text-xs font-bold hover:bg-[#084D34] transition-all border border-[#D4AF37]/40 shadow-xs flex items-center justify-center gap-2 cursor-pointer mt-1"
+                          onClick={() => {
+                            if (!isAdded) {
+                              addToCart(service, activeLength, user?.tier || 'Guest')
+                            } else {
+                              setIsCartOpen(true)
+                            }
+                          }}
+                          className={`w-full py-3 rounded-full font-label-md uppercase tracking-wider text-xs font-bold transition-all border shadow-xs flex items-center justify-center gap-2 cursor-pointer mt-1 ${
+                            isAdded
+                              ? 'bg-[#FAF6F0] text-[#042C1D] border-[#D4AF37] hover:bg-[#D4AF37]/20 font-bold'
+                              : 'bg-[#042C1D] text-[#FAF6F0] border-[#D4AF37]/40 hover:bg-[#084D34]'
+                          }`}
                         >
-                          <span className="material-symbols-outlined text-sm">calendar_month</span>
-                          <span>Book Ritual</span>
+                          <span className="material-symbols-outlined text-sm">
+                            {isAdded ? 'check_circle' : 'calendar_month'}
+                          </span>
+                          <span>{isAdded ? 'ADDED TO CART' : 'BOOK RITUAL'}</span>
                         </button>
                       </div>
                     </div>
