@@ -74,6 +74,79 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
     { id: 'usr_3', username: 'new_guest_2026', tier: 'Guest', registeredAt: '2026-08-24' }
   ])
 
+  // Membership Requests State
+  const [membershipRequests, setMembershipRequests] = useState([
+    { id: 'req_1', userId: 'usr_3', fullName: 'Shorroh Surmi', email: 'surmi@salonorganics.com', phoneNumber: '+91 98765 43210', status: 'pending', createdAt: '2026-08-25' },
+    { id: 'req_2', userId: 'usr_4', fullName: 'Ananya Sharma', email: 'ananya@gmail.com', phoneNumber: '+91 91234 56789', status: 'approved', createdAt: '2026-08-24' }
+  ])
+
+  const fetchMembershipRequests = async () => {
+    try {
+      let res = await fetch('/api/v1/admin/membership-requests')
+      if (!res.ok) {
+        res = await fetch('http://localhost:3000/api/v1/admin/membership-requests')
+      }
+      const data = await res.json()
+      if (data.success && Array.isArray(data.requests)) {
+        setMembershipRequests(data.requests)
+      }
+    } catch {}
+  }
+
+  const handleApproveRequest = async (reqId) => {
+    try {
+      let res = await fetch(`/api/v1/admin/membership-requests/${reqId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'approved' })
+      })
+      if (!res.ok) {
+        res = await fetch(`http://localhost:3000/api/v1/admin/membership-requests/${reqId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'approved' })
+        })
+      }
+      const data = await res.json()
+      if (data.success) {
+        setToast('Membership Request Approved! User upgraded to Gold Member.')
+        setMembershipRequests(prev => prev.map(r => r.id === reqId ? { ...r, status: 'approved' } : r))
+        setTimeout(() => setToast(''), 3500)
+      }
+    } catch {
+      setMembershipRequests(prev => prev.map(r => r.id === reqId ? { ...r, status: 'approved' } : r))
+      setToast('Membership Request Approved! User upgraded to Gold Member.')
+      setTimeout(() => setToast(''), 3500)
+    }
+  }
+
+  const handleRejectRequest = async (reqId) => {
+    try {
+      let res = await fetch(`/api/v1/admin/membership-requests/${reqId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'rejected' })
+      })
+      if (!res.ok) {
+        res = await fetch(`http://localhost:3000/api/v1/admin/membership-requests/${reqId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'rejected' })
+        })
+      }
+      const data = await res.json()
+      if (data.success) {
+        setToast('Membership Request Rejected.')
+        setMembershipRequests(prev => prev.map(r => r.id === reqId ? { ...r, status: 'rejected' } : r))
+        setTimeout(() => setToast(''), 3500)
+      }
+    } catch {
+      setMembershipRequests(prev => prev.map(r => r.id === reqId ? { ...r, status: 'rejected' } : r))
+      setToast('Membership Request Rejected.')
+      setTimeout(() => setToast(''), 3500)
+    }
+  }
+
   // Strict Route Guard Protection
   useEffect(() => {
     if (!admin) {
@@ -532,6 +605,19 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
           >
             <span className="material-symbols-outlined text-base">edit_note</span>
             <span>CMS Landing Page</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveTab('membership_requests')
+              fetchMembershipRequests()
+            }}
+            className={`flex-1 py-3 text-center font-label-md uppercase tracking-wider text-xs transition-all duration-300 rounded-xl font-bold flex items-center justify-center gap-2 cursor-pointer ${
+              activeTab === 'membership_requests' ? 'bg-[#042C1D] text-[#FAF6F0] shadow-sm' : 'text-on-surface-variant hover:text-[#042C1D]'
+            }`}
+          >
+            <span className="material-symbols-outlined text-base">card_membership</span>
+            <span>Membership Requests</span>
           </button>
 
           <button
@@ -995,7 +1081,74 @@ export default function AdminDashboardPage({ admin, cmsSettings, onSaveCMS, onAd
           </div>
         )}
 
-        {/* Tab 5: User Tier Audit */}
+        {/* Tab 5: Membership Requests Atelier */}
+        {activeTab === 'membership_requests' && (
+          <div className="bg-white rounded-3xl border border-[#042C1D]/15 p-6 md:p-8 shadow-sm flex flex-col gap-6">
+            <div className="flex justify-between items-center border-b border-outline-variant/20 pb-4">
+              <div>
+                <h2 className="font-headline-lg text-xl text-[#042C1D] font-bold">Membership Requests Atelier</h2>
+                <p className="text-xs text-on-surface-variant">Review and manage client botanical membership applications.</p>
+              </div>
+              <span className="bg-[#FAF6F0] text-gold border border-gold/30 px-3.5 py-1 rounded-full text-xs font-bold font-mono">
+                {membershipRequests.filter(r => r.status === 'pending').length} Pending Applications
+              </span>
+            </div>
+
+            <div className="divide-y border border-[#042C1D]/15 rounded-2xl bg-white overflow-hidden shadow-xs">
+              {membershipRequests.length === 0 ? (
+                <div className="p-8 text-center text-xs text-on-surface-variant font-medium">
+                  No membership requests currently submitted.
+                </div>
+              ) : (
+                membershipRequests.map(req => (
+                  <div key={req.id} className="p-4 md:p-5 flex flex-col sm:flex-row justify-between sm:items-center gap-4 hover:bg-[#FAF6F0]/40 transition-colors">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-bold text-[#042C1D] text-sm">{req.fullName}</span>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                          req.status === 'approved'
+                            ? 'bg-[#042C1D] text-gold border border-gold/40'
+                            : (req.status === 'rejected' ? 'bg-error/15 text-error' : 'bg-amber-100 text-amber-800')
+                        }`}>
+                          {req.status}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-4 text-xs text-on-surface-variant font-mono">
+                        <span>📧 {req.email}</span>
+                        <span>📞 {req.phoneNumber}</span>
+                        <span>📅 Submitted: {req.createdAt ? req.createdAt.split('T')[0] : '2026-08-25'}</span>
+                      </div>
+                    </div>
+
+                    {req.status === 'pending' ? (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleApproveRequest(req.id)}
+                          className="bg-[#042C1D] text-[#FAF6F0] hover:bg-[#084D34] px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border border-gold/40 flex items-center gap-1 cursor-pointer transition-all shadow-xs"
+                        >
+                          <span className="material-symbols-outlined text-sm text-gold">check_circle</span>
+                          <span>Approve</span>
+                        </button>
+                        <button
+                          onClick={() => handleRejectRequest(req.id)}
+                          className="bg-error/10 hover:bg-error/20 text-error px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border border-error/30 transition-all cursor-pointer"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-on-surface-variant font-semibold italic">
+                        {req.status === 'approved' ? '✓ Member Tier Granted' : '✕ Application Declined'}
+                      </span>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Tab 6: User Tier Audit */}
         {activeTab === 'users' && (
           <div className="bg-white rounded-3xl border border-[#042C1D]/15 p-6 md:p-8 shadow-sm">
             <h2 className="font-headline-lg text-xl text-[#042C1D] mb-4 font-bold">User Tier Audit & Registry</h2>

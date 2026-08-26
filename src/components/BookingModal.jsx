@@ -184,7 +184,7 @@ export default function BookingModal({ isOpen, user, onClose, onBookingSuccess }
           <div className="w-12 h-px bg-[#D4AF37] mx-auto mt-2"></div>
         </div>
 
-        {errorMessage && (
+        {errorMessage && cartItems.length > 0 && (
           <div className="mb-4 p-3 rounded-xl bg-error/15 border border-error/40 text-center text-xs text-error font-bold flex items-center justify-center gap-2">
             <span className="material-symbols-outlined text-sm">warning</span>
             <span>{errorMessage}</span>
@@ -201,14 +201,20 @@ export default function BookingModal({ isOpen, user, onClose, onBookingSuccess }
               </div>
 
               {cartItems.length === 0 ? (
-                /* Empty State */
-                <div className="py-12 px-4 text-center bg-white border border-gold/30 rounded-2xl flex flex-col items-center gap-3">
+                /* Clean Empty State */
+                <div className="py-10 px-4 text-center bg-white border border-gold/30 rounded-2xl flex flex-col items-center gap-2.5">
                   <div className="w-12 h-12 rounded-full bg-[#FAF6F0] border border-gold/30 flex items-center justify-center text-gold">
                     <span className="material-symbols-outlined text-2xl">shopping_bag</span>
                   </div>
-                  <p className="text-xs text-on-surface-variant font-medium">
-                    No rituals selected. Choose a service to begin.
+                  <h3 className="font-headline-md text-base text-[#042C1D] font-bold">
+                    Your cart is currently empty
+                  </h3>
+                  <p className="text-xs text-on-surface-variant max-w-xs font-medium leading-relaxed">
+                    Select a ritual from our services list to begin your booking.
                   </p>
+                  <span className="bg-[#FAF6F0] text-gold font-mono font-bold px-3 py-1 rounded-full text-[11px] border border-gold/30 mt-1">
+                    0 Services Selected
+                  </span>
                 </div>
               ) : (
                 /* Dynamic Cart Items List */
@@ -232,7 +238,10 @@ export default function BookingModal({ isOpen, user, onClose, onBookingSuccess }
                       <div className="flex items-center gap-3">
                         <span className="font-mono font-extrabold text-gold text-sm">₹{srv.price}</span>
                         <button
-                          onClick={() => handleRemoveService(srv.id)}
+                          onClick={() => {
+                            setErrorMessage('')
+                            handleRemoveService(srv.id)
+                          }}
                           className="text-error hover:bg-error/10 p-1.5 rounded-lg transition-colors cursor-pointer"
                           title="Remove service ritual"
                         >
@@ -248,9 +257,9 @@ export default function BookingModal({ isOpen, user, onClose, onBookingSuccess }
               <div className="bg-[#FAF6F0] p-4 rounded-2xl border border-gold/30 flex justify-between items-center text-sm font-bold text-[#042C1D]">
                 <div>
                   <span>Total Estimated Price</span>
-                  <span className="text-[10px] text-gold block font-mono">({userTier} Rate)</span>
+                  <span className="text-[10px] text-gold block font-mono">({cartItems.length === 0 ? 'Empty' : `${userTier} Rate`})</span>
                 </div>
-                <span className="text-gold font-extrabold text-lg">₹{totalAmount}</span>
+                <span className="text-gold font-extrabold text-lg">₹{cartItems.length === 0 ? 0 : totalAmount}</span>
               </div>
 
               <button

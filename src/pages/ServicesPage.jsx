@@ -118,6 +118,25 @@ export default function ServicesPage({ user, onOpenBookingModal, onNavigate, onO
                   }
 
                   const isAdded = isInCart(service.id)
+                  const isMemberUser = Boolean(user && user.tier && user.tier !== 'Guest')
+                  const hasOffer = typeof offerPrice === 'number' && offerPrice > 0 && offerPrice < (standardPrice || Infinity)
+
+                  let activePrice = standardPrice
+                  let strikethroughPrice = null
+
+                  if (isMemberUser) {
+                    activePrice = typeof memberPrice === 'number' ? memberPrice : (memberPrice === 'Complimentary' ? 0 : standardPrice)
+                    strikethroughPrice = standardPrice
+                  } else if (hasOffer) {
+                    activePrice = offerPrice
+                    strikethroughPrice = standardPrice
+                  }
+
+                  const formatRateDisplay = (val, sym = '₹') => {
+                    if (val === 0 || val === '0' || val === 'Complimentary' || val === 'Free') return 'Complimentary'
+                    if (typeof val === 'number') return `${sym}${val}`
+                    return val ? `${sym}${val}` : 'Complimentary'
+                  }
 
                   return (
                     <div
@@ -183,36 +202,38 @@ export default function ServicesPage({ user, onOpenBookingModal, onNavigate, onO
                           </div>
                         )}
 
-                        {/* Render Price Modes */}
+                        {/* Single Active Rate Display */}
                         {isConsultation ? (
-                          <div className="bg-[#FAF6F0] border border-[#D4AF37] p-3 rounded-2xl text-center">
+                          <div className="bg-[#FAF6F0] border border-[#D4AF37] p-3.5 rounded-2xl text-center">
                             <span className="text-xs font-bold text-[#042C1D] uppercase tracking-wider">
                               ✨ {service.pricing_label || 'Priced on consultation'}
                             </span>
                           </div>
                         ) : (
-                          <div className="grid grid-cols-3 gap-2 text-center">
-                            {/* Member */}
-                            <div className="bg-[#042C1D] text-[#FAF6F0] p-2.5 rounded-2xl border border-gold">
-                              <span className="text-[9px] uppercase font-bold text-gold block">Member</span>
-                              <span className="font-extrabold text-sm text-gold">
-                                {memberPrice === 'Complimentary' ? 'Complimentary' : `${symbol}${memberPrice}`}
+                          <div className="bg-[#FAF6F0] p-3.5 rounded-2xl border border-gold/40 flex items-center justify-between">
+                            <div>
+                              <span className="text-[10px] uppercase font-bold text-on-surface-variant block tracking-wider mb-0.5">
+                                {isMemberUser ? 'Member Exclusive Rate' : (hasOffer ? 'Special Offer Rate' : 'Standard Rate')}
                               </span>
+                              <div className="flex items-baseline gap-2">
+                                {strikethroughPrice != null && strikethroughPrice !== activePrice && (
+                                  <span className="text-xs text-on-surface-variant line-through font-semibold font-mono">
+                                    {formatRateDisplay(strikethroughPrice, symbol)}
+                                  </span>
+                                )}
+                                <span className="font-extrabold text-base text-[#042C1D] font-mono">
+                                  {formatRateDisplay(activePrice, symbol)}
+                                </span>
+                              </div>
                             </div>
 
-                            {/* Offer */}
-                            <div className="bg-[#FAF6F0] p-2.5 rounded-2xl border border-gold/40">
-                              <span className="text-[9px] uppercase font-bold text-secondary block">Special Offer</span>
-                              <span className="font-bold text-sm text-secondary">
-                                {offerPrice === 0 ? 'Free' : `${symbol}${offerPrice}`}
-                              </span>
-                            </div>
-
-                            {/* Standard */}
-                            <div className="bg-white p-2.5 rounded-2xl border border-outline-variant/30">
-                              <span className="text-[9px] uppercase font-bold text-on-surface-variant block">Standard</span>
-                              <span className="font-bold text-sm text-on-background">{symbol}{standardPrice}</span>
-                            </div>
+                            <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                              isMemberUser
+                                ? 'bg-[#042C1D] text-gold border border-gold/40'
+                                : (hasOffer ? 'bg-[#D4AF37] text-[#042C1D] font-extrabold' : 'bg-white text-[#042C1D] border border-outline-variant/30')
+                            }`}>
+                              {isMemberUser ? (user?.tier || 'Gold Member') : (hasOffer ? 'Special Offer' : 'Standard')}
+                            </span>
                           </div>
                         )}
 
